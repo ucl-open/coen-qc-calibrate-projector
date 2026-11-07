@@ -9,17 +9,17 @@
                  xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
                  xmlns:gl="clr-namespace:Bonsai.Shaders;assembly=Bonsai.Shaders"
                  xmlns:res="clr-namespace:Bonsai.Resources;assembly=Bonsai.System"
-                 xmlns:p1="clr-namespace:;assembly=Extensions"
+                 xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns="https://bonsai-rx.org/2018/workflow">
-  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes the lookup table BonVision's GammaCorrection reads into calibration\ beside this machine's rig.yml (gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). rig-control's Calibrations page launches it with the board's PortName and the projector's DisplayDevice from rig.yml. Ready once the board answers; Go runs the ramp; Finished once the lookup is written.</Description>
+  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). rig-control's Calibrations page launches it with the board's PortName and the projector's DisplayDevice from rig.yml. Ready once the board answers; Go runs the ramp; Finished once every level is written.</Description>
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
-        <Property Name="ConfigRoot" DisplayName="ConfigRoot" Description="The root under which each machine has its own configuration directory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml; the lookup is written into calibration\ there." />
+        <Property Name="ConfigRoot" DisplayName="ConfigRoot" Description="The root under which each machine has its own configuration directory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml; the ramp is written into calibration\ there." />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Settings</Name>
-        <Description>RigConfigDirectory is &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;, where the lookup is written. Fails at startup if the machine has no configuration directory.</Description>
+        <Description>RigConfigDirectory is &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;, where the ramp is written. Fails at startup if the machine has no configuration directory.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
@@ -213,26 +213,18 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Calibration</Name>
-        <Description>At Go: after 1 s of black, each of Levels grey levels full screen for Period, its photodiode reading the mean from 0.2 s to 0.45 s in (the level as the level metric). Then WriteGammaLookup (src\Extensions) interpolates the drive level for each brightness from the ramp, above the dark screen's reading, and writes calibration\gammalut.bmp and gammalut.json into RigConfigDirectory, keeping the lookup it replaces and a dated copy of the new one in calibration\history\. It refuses a ramp that got no brighter. calibratedBy is whoever pressed Go (OpenRigs.Control GoByName). Reports the fit as the points metric, then Finished.</Description>
+        <Description>At Go: after 1 s of black, each of Levels grey levels full screen for Period, its photodiode reading the mean from 0.2 s to 0.45 s in (the level as the level metric). Each level and its reading is written as it comes to calibration\gamma-ramp.csv in RigConfigDirectory (columns level, reading; replaced every run). No fit here: once the run completes, rig-control interpolates the lookup from the ramp and writes calibration\gammalut.bmp and gammalut.json, with history, refusing a ramp that got no brighter. Reports how many levels were measured as the points metric, then Finished.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="SubscribeSubject">
-              <Name>ExperimentGo</Name>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="orcl:GoByName" />
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="CalibratedBy" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
               <Name>RigConfigDirectory</Name>
             </Expression>
+            <Expression xsi:type="Format">
+              <Format>{0}\calibration\gamma-ramp.csv</Format>
+            </Expression>
             <Expression xsi:type="PropertyMapping">
               <PropertyMappings>
-                <Property Name="Directory" />
+                <Property Name="FileName" />
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
@@ -244,7 +236,7 @@
             </Expression>
             <Expression xsi:type="rx:SelectMany">
               <Name>Ramp</Name>
-              <Description>The levels, one every Period after 1 s, each drawn full screen and measured; the (level, reading) pairs as one array once the last is read.</Description>
+              <Description>The levels, one every Period after 1 s, each drawn full screen and measured; each (level, reading) pair once it is read, completing after the last.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
@@ -352,9 +344,6 @@
                       </Edges>
                     </Workflow>
                   </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="rx:ToArray" />
-                  </Expression>
                   <Expression xsi:type="WorkflowOutput" />
                 </Nodes>
                 <Edges>
@@ -370,16 +359,24 @@
                   <Edge From="10" To="11" Label="Source1" />
                   <Edge From="6" To="12" Label="Source1" />
                   <Edge From="12" To="13" Label="Source1" />
-                  <Edge From="13" To="14" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
+            <Expression xsi:type="scr:ExpressionTransform">
+              <scr:Expression>new(Item1 as level, Item2 as reading)</scr:Expression>
+            </Expression>
+            <Expression xsi:type="io:CsvWriter">
+              <io:FileName>gamma-ramp.csv</io:FileName>
+              <io:Append>false</io:Append>
+              <io:Overwrite>true</io:Overwrite>
+              <io:Suffix>None</io:Suffix>
+              <io:IncludeHeader>true</io:IncludeHeader>
+            </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="p1:WriteGammaLookup">
-                <p1:Directory />
-                <p1:FileName>gammalut</p1:FileName>
-                <p1:CalibratedBy>unknown</p1:CalibratedBy>
-              </Combinator>
+              <Combinator xsi:type="rx:Count" />
+            </Expression>
+            <Expression xsi:type="Format">
+              <Format>{0} levels measured</Format>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="orcl:ReportMetric">
@@ -395,14 +392,15 @@
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
             <Edge From="1" To="2" Label="Source1" />
-            <Edge From="3" To="4" Label="Source1" />
+            <Edge From="4" To="5" Label="Source1" />
+            <Edge From="3" To="5" Label="Source2" />
+            <Edge From="5" To="6" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
-            <Edge From="5" To="7" Label="Source2" />
+            <Edge From="2" To="7" Label="Source2" />
             <Edge From="7" To="8" Label="Source1" />
-            <Edge From="2" To="8" Label="Source2" />
-            <Edge From="4" To="8" Label="Source3" />
             <Edge From="8" To="9" Label="Source1" />
             <Edge From="9" To="10" Label="Source1" />
+            <Edge From="10" To="11" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
