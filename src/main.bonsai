@@ -221,10 +221,38 @@
             <Expression xsi:type="Format">
               <Format>{0}\calibration\gamma-ramp.csv</Format>
             </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="FileName" />
-              </PropertyMappings>
+            <Expression xsi:type="rx:SelectMany">
+              <Name>WriteRamp</Name>
+              <Description>The ramp file, opened only once its path is known: a CsvWriter creates its file when the workflow starts, from whatever FileName it has then, and RigConfigDirectory (an AsyncSubject) arrives a moment later, so a writer mapped from it directly wrote into the workflow's own folder, the lab clone, every run. Started by the path, it writes the rows RampReadings carries.</Description>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="FileName" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>RampReadings</Name>
+                  </Expression>
+                  <Expression xsi:type="io:CsvWriter">
+                    <io:FileName>gamma-ramp.csv</io:FileName>
+                    <io:Append>false</io:Append>
+                    <io:Overwrite>true</io:Overwrite>
+                    <io:Suffix>None</io:Suffix>
+                    <io:IncludeHeader>true</io:IncludeHeader>
+                  </Expression>
+                  <Expression xsi:type="WorkflowOutput" />
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="3" Label="Source2" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source1" />
+                </Edges>
+              </Workflow>
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="Levels" DisplayName="Levels" />
@@ -359,12 +387,8 @@
             <Expression xsi:type="scr:ExpressionTransform">
               <scr:Expression>new(Item1 as level, Item2 as reading)</scr:Expression>
             </Expression>
-            <Expression xsi:type="io:CsvWriter">
-              <io:FileName>gamma-ramp.csv</io:FileName>
-              <io:Append>false</io:Append>
-              <io:Overwrite>true</io:Overwrite>
-              <io:Suffix>None</io:Suffix>
-              <io:IncludeHeader>true</io:IncludeHeader>
+            <Expression xsi:type="rx:PublishSubject">
+              <Name>RampReadings</Name>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Count" />
@@ -390,8 +414,7 @@
             <Edge From="3" To="5" Label="Source2" />
             <Edge From="5" To="6" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
-            <Edge From="2" To="7" Label="Source2" />
-            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="2" To="8" Label="Source1" />
             <Edge From="8" To="9" Label="Source1" />
             <Edge From="9" To="10" Label="Source1" />
             <Edge From="10" To="11" Label="Source1" />
