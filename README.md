@@ -15,14 +15,14 @@ This workflow drives the display and the board and writes the raw ramp, nothing 
 - **A photodiode on the behavior board's ADC0**, facing the screen. The workflow reads `AnalogInput0` (1 kHz, ADC counts). Nothing else on the domes uses ADC0 today. The dome's sync-square photodiode is on a digital input (DIPort0), which says only light or dark, so it cannot measure brightness.
 - **`PortName`, from rig-control**, read from the rig's own rig.yml (`<ConfigRoot>\<MACHINE-NAME>\rig.yml`, the file av-dome reads): `behaviorBoard: main: portName`.
 - **`DisplayDevice`** stays at `First`, the display av-dome's window opens on too: rig-control passes it to neither. A dome whose projector is not Windows' first display needs it added to both (calibrations.toml's `[gamma.rig]` and av-dome's launch).
-- **`Levels`** (default 80, the width of av-dome's lookup) and **`Period`** (default 0.5 s per level). Each level is read from 0.2 s to 0.45 s after it appears, so keep `Period` at 0.5 s or more.
+- **`Levels`** (default 80, the width of av-dome's lookup). Each level shows for a fixed 0.5 s and is read from 0.2 s to 0.45 s after it appears; the period is not a property, so it cannot be set shorter than the read window.
 
 ## A Run
 
 1. Put the photodiode on the screen and into the board's ADC0. Keep the room dark.
 2. On the Calibrations page, press Projector Gamma's **Calibrate** and give your Lab PIN. The projector goes black: the window is full screen with no mesh mapping and no gamma correction, so the ramp drives the projector's raw levels.
 3. **Ready** once the photodiode's first reading arrives from ADC0 (a board sending no analog data never gets there). Press **Start Calibration**.
-4. After 1 s of black, the levels from black to white, one every `Period` (80 levels take about 41 s). The `level` metric is the one shown.
+4. After 1 s of black, the levels from black to white, one every 0.5 s (80 levels take about 41 s). The `level` metric is the one shown.
 5. **Finished** once every level is written; the `points` metric says how many. rig-control then fits the ramp and the page shows the result: the levels, the gamma that fits the ramp (brightness as level to that power), and the dark and white readings. Or why nothing was written.
 
 ## What It Writes

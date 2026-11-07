@@ -209,11 +209,10 @@
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="Levels" DisplayName="Levels" Description="How many grey levels the ramp shows, evenly from black to white; also the lookup table's width. 80 by default, as av-dome's lookup has." />
-        <Property Name="Period" DisplayName="Period" Description="How long each level is shown. Each is read from 0.2 s to 0.45 s after it appears, so keep it at 0.5 s or more." />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Calibration</Name>
-        <Description>At Go: after 1 s of black, each of Levels grey levels full screen for Period, its photodiode reading the mean from 0.2 s to 0.45 s in (the level as the level metric). Each level and its reading is written as it comes to calibration\gamma-ramp.csv in RigConfigDirectory (columns level, reading; replaced every run). No fit here: once the run completes, rig-control interpolates the lookup from the ramp and writes calibration\gammalut.bmp and gammalut.json, with history, refusing a ramp that got no brighter. Reports how many levels were measured as the points metric, then Finished.</Description>
+        <Description>At Go: after 1 s of black, each of Levels grey levels full screen for 0.5 s (fixed: the reading window ends at 0.45 s), its photodiode reading the mean from 0.2 s to 0.45 s in (the level as the level metric). Each level and its reading is written as it comes to calibration\gamma-ramp.csv in RigConfigDirectory (columns level, reading; replaced every run). No fit here: once the run completes, rig-control interpolates the lookup from the ramp and writes calibration\gammalut.bmp and gammalut.json, with history, refusing a ramp that got no brighter. Reports how many levels were measured as the points metric, then Finished.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="SubscribeSubject">
@@ -229,14 +228,13 @@
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="Levels" DisplayName="Levels" />
-              <Property Name="Period" DisplayName="Period" />
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>ExperimentGo</Name>
             </Expression>
             <Expression xsi:type="rx:SelectMany">
               <Name>Ramp</Name>
-              <Description>The levels, one every Period after 1 s, each drawn full screen and measured; each (level, reading) pair once it is read, completing after the last.</Description>
+              <Description>The levels, one every 0.5 s after 1 s, each drawn full screen and measured; each (level, reading) pair once it is read, completing after the last.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
@@ -249,9 +247,6 @@
                     <Count>80</Count>
                     <RangeMin>0</RangeMin>
                     <RangeMax>1</RangeMax>
-                  </Expression>
-                  <Expression xsi:type="ExternalizedMapping">
-                    <Property Name="Period" DisplayName="Period" />
                   </Expression>
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="rx:Timer">
@@ -348,17 +343,16 @@
                 </Nodes>
                 <Edges>
                   <Edge From="1" To="2" Label="Source1" />
-                  <Edge From="2" To="5" Label="Source1" />
-                  <Edge From="3" To="4" Label="Source1" />
-                  <Edge From="4" To="5" Label="Source2" />
+                  <Edge From="2" To="4" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source2" />
+                  <Edge From="4" To="5" Label="Source1" />
                   <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="6" To="7" Label="Source1" />
-                  <Edge From="8" To="9" Label="Source1" />
-                  <Edge From="7" To="9" Label="Source2" />
-                  <Edge From="6" To="10" Label="Source1" />
-                  <Edge From="10" To="11" Label="Source1" />
-                  <Edge From="6" To="12" Label="Source1" />
-                  <Edge From="12" To="13" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="6" To="8" Label="Source2" />
+                  <Edge From="5" To="9" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source1" />
+                  <Edge From="5" To="11" Label="Source1" />
+                  <Edge From="11" To="12" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
