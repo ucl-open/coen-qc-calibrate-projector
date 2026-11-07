@@ -1,4 +1,4 @@
-# coen-calibrate-projector
+# coen-qc-calibrate-projector
 
 Calibrates a Coen Lab dome projector. Today it does the gamma: it shows a ramp of grey levels full screen and reads each one's brightness with a photodiode. rig-control fits the ramp into the lookup table that BonVision's `GammaCorrection` reads, where the rig's experiment workflows find it. Mesh mapping will join it here; until then it is done by hand with av-dome's `src\MeshMapping`.
 
