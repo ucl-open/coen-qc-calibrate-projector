@@ -11,7 +11,7 @@
                  xmlns:res="clr-namespace:Bonsai.Resources;assembly=Bonsai.System"
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns="https://bonsai-rx.org/2018/workflow">
-  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). rig-control's Calibrations page launches it with the board's PortName and the projector's DisplayDevice from rig.yml. Ready once the board answers; Go runs the ramp; Finished once every level is written.</Description>
+  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). rig-control's Calibrations page launches it with the board's PortName from rig.yml; DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither). Ready once the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
@@ -80,7 +80,7 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Hardware</Name>
-        <Description>The behavior board on PortName. Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the board has sent an event.</Description>
+        <Description>The behavior board on PortName. Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the first ADC0 reading arrives, so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
@@ -109,7 +109,7 @@
               <Name>Photodiode</Name>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>BehaviorBoard-Main.Data</Name>
+              <Name>Photodiode</Name>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Take">
@@ -134,7 +134,7 @@
         </Workflow>
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
-        <Property Name="DisplayDevice" DisplayName="DisplayDevice" Description="The display the dome projector is on (BonVision CreateWindow), as av-dome launches it; a launch property." />
+        <Property Name="DisplayDevice" DisplayName="DisplayDevice" Description="The display the dome projector is on (BonVision CreateWindow). First by default, the display av-dome's window opens on too; rig-control passes it to neither today, so a dome whose projector is not Windows' first display needs it in calibrations.toml's [gamma.rig] and av-dome's launch together." />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Display</Name>
