@@ -262,7 +262,7 @@
             </Expression>
             <Expression xsi:type="rx:SelectMany">
               <Name>Ramp</Name>
-              <Description>The levels, one every 0.5 s after 1 s, each drawn full screen and measured; each (level, reading) pair once it is read, completing after the last.</Description>
+              <Description>The levels, one every 0.5 s after 1 s, each drawn full screen and measured; each (level, reading) pair once it is read, also reported as the reading metric ("0.513 412.37": both in one, since rig-control polls once a second), completing after the last.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
@@ -368,6 +368,15 @@
                     </Workflow>
                   </Expression>
                   <Expression xsi:type="WorkflowOutput" />
+                  <Expression xsi:type="Format">
+                    <Format>{0:0.000} {1:0.00}</Format>
+                    <Selector>Item1,Item2</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="orcl:ReportMetric">
+                      <orcl:Name>reading</orcl:Name>
+                    </Combinator>
+                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="1" To="2" Label="Source1" />
@@ -381,6 +390,8 @@
                   <Edge From="9" To="10" Label="Source1" />
                   <Edge From="5" To="11" Label="Source1" />
                   <Edge From="11" To="12" Label="Source1" />
+                  <Edge From="11" To="13" Label="Source1" />
+                  <Edge From="13" To="14" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>

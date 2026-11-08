@@ -22,7 +22,7 @@ This workflow drives the display and the board and writes the raw ramp, nothing 
 1. Put the photodiode on the screen and into the board's ADC0. Keep the room dark.
 2. On the Calibrations page, press Projector Gamma's **Calibrate** and give your Lab PIN. The projector goes black: the window is full screen with no mesh mapping and no gamma correction, so the ramp drives the projector's raw levels.
 3. **Ready** once the photodiode's first reading arrives from ADC0 (a board sending no analog data never gets there). Press **Start Calibration**.
-4. After 1 s of black, the levels from black to white, one every 0.5 s (80 levels take about 41 s). The `level` metric is the one shown.
+4. After 1 s of black, the levels from black to white, one every 0.5 s (80 levels take about 41 s). The `level` metric is the one shown; the `reading` metric is the last level read and its photodiode mean, `0.513 412.37` (both in one metric, since rig-control polls once a second and the level moves on every 0.5 s), which rig-control plots as the run goes.
 5. **Finished** once every level is written; the `points` metric says how many. rig-control then fits the ramp and the page shows the result: the levels, the gamma that fits the ramp (brightness as level to that power), and the dark and white readings. Or why nothing was written.
 
 ## What It Writes
