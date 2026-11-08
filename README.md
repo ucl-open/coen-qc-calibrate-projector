@@ -31,7 +31,7 @@ The workflow writes `calibration\gamma-ramp.csv` beside rig.yml: columns `level`
 
 Once the run completes, rig-control writes, into the same `calibration\`, where rig.yml's `projectionCalibration: gammaLutPath` points:
 
-- `gammalut.bmp`: one row, `Levels` pixels wide, 24-bit grey. Pixel *i* is the drive level that gives brightness *i* / (`Levels` - 1) of full white, above the dark screen. Each comes from the measured ramp, interpolated between the two levels around it, never falling, with black and white pinned to 0 and 1.
+- `gammalut.bmp`: one row, `Levels` pixels wide, 24-bit grey. Pixel *i* is the drive level that gives brightness (*i* + 0.5) / `Levels` of full white, above the dark screen: the input BonVision samples at that pixel's centre (rig-control's `lookup_inputs`). Each comes from the measured ramp, interpolated between the two levels around it, never falling, with black and white pinned to 0 and 1.
 - `gammalut.json`: when, who (whoever launched it, by Lab PIN), the machine, and the ramp: each level, its reading and its drive.
 - `history\`: the run's `gamma-ramp.csv` under its date (kept whether or not it could be fitted), a dated copy of the lookup and its record, and the lookup being replaced, under its own date, if it is not there already.
 
