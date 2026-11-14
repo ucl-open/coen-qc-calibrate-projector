@@ -13,9 +13,9 @@ This workflow drives the display and the board and writes the raw ramp, nothing 
 ## What It Takes
 
 - **A photodiode on the behavior board's ADC0**, facing the screen. The workflow reads `AnalogInput0` (1 kHz, ADC counts). Nothing else on the domes uses ADC0 today. The dome's sync-square photodiode is on a digital input (DIPort0), which says only light or dark, so it cannot measure brightness.
-- **`PortName`, from rig-control**, read from the rig's own rig.yml (`<ConfigRoot>\<MACHINE-NAME>\rig.yml`, the file av-dome reads): `behaviorBoard: main: portName`.
-- **`DisplayDevice`** stays at `First`, the display av-dome's window opens on too: rig-control passes it to neither. A dome whose projector is not Windows' first display needs it added to both (calibrations.toml's `[gamma.rig]` and av-dome's launch).
-- **`Levels`** (default 80, the width of av-dome's lookup). Each level shows for a fixed 0.5 s and is read from 0.2 s to 0.45 s after it appears; the period is not a property, so it cannot be set shorter than the read window.
+- **`PortName`, from rig-control**, which reads `behaviorBoard: main: portName` from the rig's own rig.yml (`<ConfigRoot>\<MACHINE-NAME>\rig.yml`) and passes it at launch; the workflow itself reads no rig.yml.
+- **`DisplayDevice`** stays at `First`, the display the lab's dome windows open on: rig-control does not pass it. A dome whose projector is not Windows' first display needs it added to calibrations.toml's `[gamma.rig]` and to that dome's own launch.
+- **`Levels`** (default 80, the width of the lab's lookup tables). Each level shows for a fixed 0.5 s and is read from 0.2 s to 0.45 s after it appears; the period is not a property, so it cannot be set shorter than the read window.
 
 ## A Run
 
