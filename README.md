@@ -39,6 +39,6 @@ A ramp whose white is no brighter than its black is refused and no lookup is wri
 
 ## Setup
 
-`scripts\deploy.ps1` (or `.bonsai\Setup.ps1`) installs Bonsai and the packages. The lab's packages come from lib-open-rigs; never bump them here by hand.
+`scripts\deploy.ps1` (or `.bonsai\Setup.ps1`) installs Bonsai and the packages: it syncs the `.venv` from `uv.lock` (uv must be on PATH), then runs the lab's one Bonsai setup from the open-rigs it pins, which also removes package folders `Bonsai.config` no longer names. The lab's packages come from lib-open-rigs; never bump them here by hand.
 
 Check a change without launching Bonsai: `C:\Github\Coen-Lab\app-rig-setup\workflows\check-workflow-builds.ps1 -Repo <this repo>`.

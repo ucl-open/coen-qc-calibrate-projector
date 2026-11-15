@@ -31,8 +31,11 @@ jobs:
         run: |
           uv sync --locked
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          uv run --locked --with pytest --with pyyaml pytest -q
-          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          # pytest exits 5 with no tests: this repo's pyproject is only the environment Setup.ps1 syncs.
+          if (Test-Path tests) {
+            uv run --locked --with pytest --with pyyaml pytest -q
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          }
       - name: Bonsai setup
         shell: pwsh
         run: |
