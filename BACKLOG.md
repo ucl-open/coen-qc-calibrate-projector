@@ -6,7 +6,7 @@
 
 ## Audit round 2 of 3 (15 Nov 2026, stage C)
 
-- `.bonsai\Setup.ps1` is a hand copy of lib-open-rigs' `setup-bonsai.ps1` (no pyproject pins it), so update it by hand when lib's changes.
+- **Done 15 Nov 2026 (d1e6cc1): one Bonsai setup.** `.bonsai\Setup.ps1` runs lib-open-rigs' `setup-bonsai.ps1` from the open-rigs `uv.lock` pins, as every lab workflow does. Was: a hand copy of it, updated by hand.
 
 ## 2026-11-14 Dome-task alignment audit
 
