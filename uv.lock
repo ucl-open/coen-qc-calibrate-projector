@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "open-rigs", git = "https://github.com/Coen-Lab/lib-open-rigs?rev=b3fa2cc677a81408c56715260cc5b1df957772ad" }]
+requires-dist = [{ name = "open-rigs", git = "https://github.com/Coen-Lab/lib-open-rigs?rev=385f915752b5df597647f03d2d742a2c33882da2" }]
 
 [[package]]
 name = "contourpy"
@@ -189,7 +189,7 @@ wheels = [
 [[package]]
 name = "open-rigs"
 version = "0.0.0"
-source = { git = "https://github.com/Coen-Lab/lib-open-rigs?rev=b3fa2cc677a81408c56715260cc5b1df957772ad#b3fa2cc677a81408c56715260cc5b1df957772ad" }
+source = { git = "https://github.com/Coen-Lab/lib-open-rigs?rev=385f915752b5df597647f03d2d742a2c33882da2#385f915752b5df597647f03d2d742a2c33882da2" }
 dependencies = [
     { name = "pydantic" },
     { name = "pydantic-yaml" },
