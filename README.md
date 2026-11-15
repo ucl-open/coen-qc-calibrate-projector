@@ -27,7 +27,7 @@ This workflow drives the display and the board and writes the raw ramp, nothing 
 
 ## What It Writes
 
-The workflow writes `calibration\gamma-ramp.csv` beside rig.yml: columns `level` (0 to 1) and `reading` (the photodiode's mean, ADC counts), one row per level as it is read, replaced each run.
+The workflow writes `calibration\gamma-ramp.csv` beside rig.yml with OpenRigs.Logging's `CsvWriter`, the lab's logger: columns `level` (0 to 1) and `reading` (the photodiode's mean, ADC counts), one row per level as it is read, replaced each run.
 
 Once the run completes, rig-control writes, into the same `calibration\`, where rig.yml's `projectionCalibration: gammaLutPath` points:
 

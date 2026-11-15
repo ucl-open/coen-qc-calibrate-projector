@@ -10,6 +10,7 @@
                  xmlns:gl="clr-namespace:Bonsai.Shaders;assembly=Bonsai.Shaders"
                  xmlns:res="clr-namespace:Bonsai.Resources;assembly=Bonsai.System"
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
+                 xmlns:orl="clr-namespace:OpenRigs.Logging;assembly=OpenRigs.Logging"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). rig-control's Calibrations page launches it with the board's PortName from rig.yml; DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither). Ready once the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
   <Workflow>
@@ -237,12 +238,14 @@
                   <Expression xsi:type="SubscribeSubject">
                     <Name>RampReadings</Name>
                   </Expression>
-                  <Expression xsi:type="io:CsvWriter">
+                  <Expression xsi:type="orl:CsvWriter">
                     <io:FileName>gamma-ramp.csv</io:FileName>
                     <io:Append>false</io:Append>
                     <io:Overwrite>true</io:Overwrite>
                     <io:Suffix>None</io:Suffix>
                     <io:IncludeHeader>true</io:IncludeHeader>
+                    <orl:AutoFlush>false</orl:AutoFlush>
+                    <orl:PublishRows>false</orl:PublishRows>
                   </Expression>
                   <Expression xsi:type="WorkflowOutput" />
                 </Nodes>
