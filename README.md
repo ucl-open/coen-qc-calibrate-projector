@@ -41,4 +41,4 @@ A ramp whose white is no brighter than its black is refused and no lookup is wri
 
 `scripts\deploy.ps1` (or `.bonsai\Setup.ps1`) installs Bonsai and the packages. The lab's packages come from lib-open-rigs; never bump them here by hand.
 
-Check a change without launching Bonsai: `C:\Github\Coen-Lab\lib-open-rigs\scripts\check-workflow-builds.ps1 -Repo <this repo>`.
+Check a change without launching Bonsai: `C:\Github\Coen-Lab\app-rig-setup\workflows\check-workflow-builds.ps1 -Repo <this repo>`.
