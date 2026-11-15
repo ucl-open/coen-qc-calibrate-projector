@@ -1,5 +1,9 @@
 # Backlog
 
+## 2026-11-15 Rig hardware as device pieces (lib-open-rigs)
+
+- lib-open-rigs' `BehaviorBoard` include became a device piece that takes its port from rig.yml and logs into the experiment folder, which a calibration does not have (no `PathPrefix`, no `HarpClockSet`). The board is opened directly instead (`Hardware > BehaviorBoard`: Harp.Behavior's `Device` on `PortName`, behind `BehaviorBoard-Main.Commands` and `.Data`), so `PortName` stays rig-control's launch property and nothing on the rig or in rig-control changes. update-workflows had refused the packages here ("The specified property 'PortName' was not found in the nested workflow").
+
 ## Audit round 3 of 3 (15 Nov 2026)
 
 - `scripts\deploy.ps1` exits 1 naming `.bonsai\Setup.ps1` when it is missing (a missing script left the last exit code, 0).

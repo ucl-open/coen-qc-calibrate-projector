@@ -87,12 +87,40 @@
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="PortName" DisplayName="PortName" />
             </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.BehaviorBoard.bonsai">
-              <CommandsSubjectName>BehaviorBoard-Main.Commands</CommandsSubjectName>
-              <PortName>COMx</PortName>
-              <DumpRegisters>true</DumpRegisters>
-              <Heartbeat>Enabled</Heartbeat>
-              <EventsSubjectName>BehaviorBoard-Main.Data</EventsSubjectName>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>BehaviorBoard</Name>
+              <Description>The behavior board on PortName, opened directly (Harp.Behavior Device): a calibration has no experiment folder, so lib-open-rigs' BehaviorBoard piece, which logs into one, does not fit. Commands on BehaviorBoard-Main.Commands, messages on BehaviorBoard-Main.Data.</Description>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="rx:BehaviorSubject" TypeArguments="harp:HarpMessage">
+                    <rx:Name>BehaviorBoard-Main.Commands</rx:Name>
+                  </Expression>
+                  <Expression xsi:type="ExternalizedMapping">
+                    <Property Name="PortName" />
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="beh:Device">
+                      <harp:OperationMode>Active</harp:OperationMode>
+                      <harp:OperationLed>Off</harp:OperationLed>
+                      <harp:DumpRegisters>true</harp:DumpRegisters>
+                      <harp:VisualIndicators>Off</harp:VisualIndicators>
+                      <harp:Heartbeat>Enabled</harp:Heartbeat>
+                      <harp:IgnoreErrors>false</harp:IgnoreErrors>
+                      <harp:PortName>COMx</harp:PortName>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="rx:PublishSubject">
+                    <Name>BehaviorBoard-Main.Data</Name>
+                  </Expression>
+                  <Expression xsi:type="WorkflowOutput" />
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="2" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source2" />
+                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source1" />
+                </Edges>
+              </Workflow>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>BehaviorBoard-Main.Data</Name>
