@@ -1,5 +1,9 @@
 # Backlog
 
+## Audit round 3 of 3 (15 Nov 2026)
+
+- `scripts\deploy.ps1` exits 1 naming `.bonsai\Setup.ps1` when it is missing (a missing script left the last exit code, 0).
+
 ## Audit round 2 of 3 (15 Nov 2026, stage C)
 
 - `.bonsai\Setup.ps1` is a hand copy of lib-open-rigs' `setup-bonsai.ps1` (no pyproject pins it), so update it by hand when lib's changes.
