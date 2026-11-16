@@ -44,7 +44,7 @@ def test_every_command_is_declared(wf):
 
 def test_no_experiment_folder(wf):
     # NoExperimentFolder's PathPrefix is never published, so no piece's log starts.
-    assert [p for p in lint.no_experiment_folder_problems(wf) if "has no SubjectId" not in p] == []  # the pinned lib wants one set; the next lib defaults it (drop the filter at that bump)
+    assert lint.no_experiment_folder_problems(wf) == []
 
 
 def test_no_launch_property_but_the_lab_ones(wf):
