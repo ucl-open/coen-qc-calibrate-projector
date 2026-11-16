@@ -1,37 +1,14 @@
 # Backlog
 
-## 2026-11-16 Pieces declare their own commands and parameters (lib-open-rigs def14f6; Control .13, Devices .27)
+History is in `git log`.
 
-- Nothing to drop here; `tests\test_workflow.py` adds `declared_twice`.
+## Open
 
-## 2026-11-16 ReadyGate's WorkflowStages (OpenRigs.Core .22, Devices .26)
+- Run it on a dome: it builds, and app-rig-control's fit is tested on synthetic ramps; the first run needs someone at the dome.
+- Mesh mapping joins it here; until then it is done by hand with av-dome's `src\MeshMapping`.
+- Its window is its own (`Display`: CreateWindow, OrthographicView) because lib's `ProjectorDisplay` always applies mesh mapping and the gamma table, which a gamma calibration must not. A raw display in lib (the window, view and render-thread disposal without the two corrections) would let it use the lab's window and its start-up deadlock fix.
 
-- Done (Pip, 16 Nov 2026): `src\main.bonsai` names its own stage `PhotodiodeReading` in ReadyGate's new `WorkflowStages`, and `ReadyWaitsFor` is the pieces' `HarpClockSet` alone. Ready waits for the same stages as before. `tests\test_workflow.py` expects no `hardware_problems`: lint holds `WorkflowStages` equal to the workflow's own `AnnounceStage` nodes, so the exception for the workflow's own stage is gone.
+## Decided
 
-## 2026-11-16 NoExperimentFolder (OpenRigs.Logging .16)
-
-- Done: `src\main.bonsai` includes lib-open-rigs' `NoExperimentFolder` (`SubjectId` `_projector-calibration_`, which no piece here reads) in its Settings group, in place of its own never-published `PathPrefix`. Nothing written changes: no piece logs, and `gamma-ramp.csv` is as before. `tests\test_workflow.py` holds it to `no_experiment_folder_problems`.
-
-## 2026-11-16 Onto the lab's device pieces (lib-open-rigs 5ea5729)
-
-- Done: the board is lib's `BehaviorBoard` piece, with `ReadLabRig`, `ReadyGate` and the dome's clock `ClockFromTimestampGenerator` (Pip, 16 Nov 2026: QC workflows use the same pieces as the tasks, never a device opened by hand). `PathPrefix` declared and never published, so no piece logs. Replaces e647052's board opened by hand. The ramp, its timing, `gamma-ramp.csv` (`level`, `reading`) and the metrics are unchanged.
-- Changed: `PortName` is no longer a launch property; the board's port comes from rig.yml. app-rig-control's `calibrations.toml` `[gamma.rig] PortName` must go in the same sitting, or the agent refuses the launch (an unknown launch property).
-- Changed: the board's clock is now set (the generator's UTC clock, as in a session), and Ready also waits for it; a generator that does not answer stops the workflow, naming it.
-- Done: the ramp's level reaches DrawQuad's colour through its own `Item1` (`shared_mapping_problems`). `tests\test_workflow.py` added, with pytest.
-- Done 16 Nov 2026 (ReadyGate's WorkflowStages, above). Suggestion for lib: `hardware_problems` knows only the pieces' Ready stages; this workflow announces its own (`PhotodiodeReading`), so the test expects that one problem.
-
-## 2026-11-15 Rig hardware as device pieces (lib-open-rigs)
-
-- lib-open-rigs' `BehaviorBoard` include became a device piece that takes its port from rig.yml and logs into the experiment folder, which a calibration does not have (no `PathPrefix`, no `HarpClockSet`). The board is opened directly instead (`Hardware > BehaviorBoard`: Harp.Behavior's `Device` on `PortName`, behind `BehaviorBoard-Main.Commands` and `.Data`), so `PortName` stays rig-control's launch property and nothing on the rig or in rig-control changes. update-workflows had refused the packages here ("The specified property 'PortName' was not found in the nested workflow").
-
-## Audit round 3 of 3 (15 Nov 2026)
-
-- `scripts\deploy.ps1` exits 1 naming `.bonsai\Setup.ps1` when it is missing (a missing script left the last exit code, 0).
-
-## Audit round 2 of 3 (15 Nov 2026, stage C)
-
-- **Done 15 Nov 2026 (d1e6cc1): one Bonsai setup.** `.bonsai\Setup.ps1` runs lib-open-rigs' `setup-bonsai.ps1` from the open-rigs `uv.lock` pins, as every lab workflow does. Was: a hand copy of it, updated by hand.
-
-## 2026-11-14 Dome-task alignment audit
-
-- **Done 15 Nov 2026: log through the lab's loggers.** `gamma-ramp.csv` is written by OpenRigs.Logging's `CsvWriter` (columns `level`, `reading`). Was: written by Bonsai's own `CsvWriter` (dome-task alignment audit, 14 Nov 2026).
+- The board and clock are lib's pieces, never a board opened by hand (Pip, 16 Nov 2026); no experiment folder (`NoExperimentFolder`); `PortName` is no launch property.
+- Bonsai measures, app-rig-control computes: the workflow writes `gamma-ramp.csv` (OpenRigs.Logging `CsvWriter`) and nothing else.

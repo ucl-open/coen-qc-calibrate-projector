@@ -11,6 +11,7 @@
                  xmlns:res="clr-namespace:Bonsai.Resources;assembly=Bonsai.System"
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns:orl="clr-namespace:OpenRigs.Logging;assembly=OpenRigs.Logging"
+                 xmlns:lv="clr-namespace:OpenRigs.LiveView;assembly=OpenRigs.LiveView"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). The board and the clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromTimestampGenerator, ReadyGate); a calibration has no experiment folder (OpenRigs.Logging NoExperimentFolder), so no piece logs. DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither). Ready once the clock is set and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
   <Workflow>
@@ -439,6 +440,13 @@
             <Edge From="10" To="11" Label="Source1" />
           </Edges>
         </Workflow>
+      </Expression>
+      <Expression xsi:type="lv:StreamDevices">
+        <Name>LiveView</Name>
+        <Description>Streams every rig.yml device this workflow publishes (its &lt;Device&gt;.Data) to rig-control's live view (OpenRigs.LiveView): data on TCP 5556, video on 5558, as in every lab workflow. Last, with nothing feeding it: it finds only subjects built before it.</Description>
+        <lv:ConfigRoot>C:\Coen-Lab-Local\RigConfigs</lv:ConfigRoot>
+        <lv:DataPort>5556</lv:DataPort>
+        <lv:VideoPort>5558</lv:VideoPort>
       </Expression>
     </Nodes>
     <Edges>

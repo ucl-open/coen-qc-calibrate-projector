@@ -57,3 +57,11 @@ def test_no_launch_property_but_the_lab_ones(wf):
 def test_the_ramp_file_keeps_its_columns(wf):
     assert "new(Item1 as level, Item2 as reading)" in wf.text
     assert "{0}\\calibration\\gamma-ramp.csv" in wf.text
+
+
+def test_live_view_is_last_and_fed_by_nothing(wf):
+    # It streams its devices, as every lab workflow does. StreamDevices finds only subjects built before it, so nothing
+    # feeds it and nothing follows it.
+    nodes, edges = lint.nodes_and_edges(wf.root.find(W + "Workflow"))
+    (live,) = [i for i, n in enumerate(nodes) if n.get(XSI) == "lv:StreamDevices"]
+    assert live == len(nodes) - 1 and not [e for e in edges if live in e[:2]]
