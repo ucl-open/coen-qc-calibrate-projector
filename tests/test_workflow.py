@@ -18,7 +18,7 @@ def wf():
 def test_the_hardware_is_the_lab_pieces(wf):
     # Ready also waits for the photodiode's first reading, the workflow's own stage (ReadyGate's WorkflowStages).
     assert lint.hardware_problems(wf) == []
-    assert dict(lint.hardware(wf))[lint.READY_GATE]["WorkflowStages"] == "PhotodiodeReading"
+    assert dict(lint.hardware(wf))[lint.READY_GATE]["WorkflowStages"] == "CalibrationReady"
 
 
 def test_the_devices_it_drives(wf):
@@ -65,3 +65,9 @@ def test_live_view_is_last_and_fed_by_nothing(wf):
     nodes, edges = lint.nodes_and_edges(wf.root.find(W + "Workflow"))
     (live,) = [i for i, n in enumerate(nodes) if n.get(XSI) == "lv:StreamDevices"]
     assert live == len(nodes) - 1 and not [e for e in edges if live in e[:2]]
+
+def test_read_lab_rig_and_no_experiment_folder_are_top_level(wf):
+    # As in the preflights and the tasks: ConfigRoot's mapping feeds ReadLabRig, then NoExperimentFolder, first of all.
+    nodes, edges = lint.nodes_and_edges(lint.child(wf.root, W + "Workflow"))
+    assert [n.get("Path") for n in nodes[1:3]] == [lint.READ_LAB_RIG, lint.NO_EXPERIMENT_FOLDER]
+    assert [p.get("Name") for p in nodes[0].iter(W + "Property")] == ["ConfigRoot"] and (0, 1) in [e[:2] for e in edges]

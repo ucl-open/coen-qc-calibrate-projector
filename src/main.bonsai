@@ -19,25 +19,11 @@
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="ConfigRoot" DisplayName="ConfigRoot" Description="The root under which each machine has its own configuration directory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml; the ramp is written into calibration\ there." />
       </Expression>
-      <Expression xsi:type="GroupWorkflow">
-        <Name>Settings</Name>
-        <Description>This machine's rig.yml in the lab rig model (OpenRigs.Devices ReadLabRig, as every lab workflow reads it): RigConfigs, which the pieces take their entries from, and RigConfigDirectory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;, where the ramp is written. Stops at Start if the folder or rig.yml is missing. NoExperimentFolder (OpenRigs.Logging) declares PathPrefix, never published, as a calibration has no experiment folder, so the pieces' logs, which wait for it, never start; and SubjectId, _projector-calibration_, which no piece here reads.</Description>
-        <Workflow>
-          <Nodes>
-            <Expression xsi:type="ExternalizedMapping">
-              <Property Name="ConfigRoot" DisplayName="ConfigRoot" />
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadLabRig.bonsai">
-              <ConfigRoot>C:\Coen-Lab-Local\RigConfigs</ConfigRoot>
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:NoExperimentFolder.bonsai">
-              <SubjectId>_projector-calibration_</SubjectId>
-            </Expression>
-          </Nodes>
-          <Edges>
-            <Edge From="0" To="1" Label="Source1" />
-          </Edges>
-        </Workflow>
+      <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadLabRig.bonsai">
+        <ConfigRoot>C:\Coen-Lab-Local\RigConfigs</ConfigRoot>
+      </Expression>
+      <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:NoExperimentFolder.bonsai">
+        <SubjectId>_projector-calibration_</SubjectId>
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="SubjectId" />
@@ -76,12 +62,12 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Hardware</Name>
-        <Description>The lab's device pieces, as in a session (lib-open-rigs building-blocks), never a board opened by hand (Pip, 16 Nov 2026): the Ready gate (ReadyGate), the dome's clock (ClockFromTimestampGenerator, TimestampGeneratorGen3-Main) and the behavior board BehaviorBoard-Main on rig.yml's port (BehaviorBoard). Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the clock is set and the first ADC0 reading has arrived (PhotodiodeReading, this workflow's own stage, ReadyGate's WorkflowStages), so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
+        <Description>The lab's device pieces, as in a session (lib-open-rigs building-blocks), never a board opened by hand (Pip, 16 Nov 2026): the Ready gate (ReadyGate), the dome's clock (ClockFromTimestampGenerator, TimestampGeneratorGen3-Main) and the behavior board BehaviorBoard-Main on rig.yml's port (BehaviorBoard). Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the clock is set and the first ADC0 reading has arrived (CalibrationReady, this workflow's own stage, ReadyGate's WorkflowStages), so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadyGate.bonsai">
               <PieceStages>HarpClockSet</PieceStages>
-              <WorkflowStages>PhotodiodeReading</WorkflowStages>
+              <WorkflowStages>CalibrationReady</WorkflowStages>
             </Expression>
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ClockFromTimestampGenerator.bonsai">
               <Name>TimestampGeneratorGen3-Main</Name>
@@ -118,7 +104,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="orc:AnnounceStage">
-                <orc:Stage>PhotodiodeReading</orc:Stage>
+                <orc:Stage>CalibrationReady</orc:Stage>
               </Combinator>
             </Expression>
             <Expression xsi:type="MulticastSubject">
@@ -451,9 +437,9 @@
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
-      <Edge From="2" To="3" Label="Source1" />
-      <Edge From="5" To="6" Label="Source1" />
-      <Edge From="7" To="8" Label="Source1" />
+      <Edge From="3" To="4" Label="Source1" />
+      <Edge From="6" To="7" Label="Source1" />
+      <Edge From="8" To="9" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
