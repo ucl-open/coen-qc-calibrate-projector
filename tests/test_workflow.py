@@ -39,7 +39,7 @@ def test_every_announcer_never_completes(wf):
 
 
 def test_every_command_is_declared(wf):
-    assert lint.undeclared_commands(wf) == []
+    assert lint.undeclared_commands(wf) == [] and lint.declared_twice(wf) == []
 
 
 def test_no_experiment_folder(wf):

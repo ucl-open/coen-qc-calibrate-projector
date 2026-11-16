@@ -1,5 +1,9 @@
 # Backlog
 
+## 2026-11-16 Pieces declare their own commands and parameters (lib-open-rigs def14f6; Control .13, Devices .27)
+
+- Nothing to drop here; `tests\test_workflow.py` adds `declared_twice`.
+
 ## 2026-11-16 ReadyGate's WorkflowStages (OpenRigs.Core .22, Devices .26)
 
 - Done (Pip, 16 Nov 2026): `src\main.bonsai` names its own stage `PhotodiodeReading` in ReadyGate's new `WorkflowStages`, and `ReadyWaitsFor` is the pieces' `HarpClockSet` alone. Ready waits for the same stages as before. `tests\test_workflow.py` expects no `hardware_problems`: lint holds `WorkflowStages` equal to the workflow's own `AnnounceStage` nodes, so the exception for the workflow's own stage is gone.
