@@ -72,3 +72,9 @@ def test_read_lab_rig_and_no_experiment_folder_are_top_level(wf):
     nodes, edges = lint.nodes_and_edges(lint.child(wf.root, W + "Workflow"))
     assert [n.get("Path") for n in nodes[1:3]] == [lint.READ_LAB_RIG, lint.NO_EXPERIMENT_FOLDER]
     assert [p.get("Name") for p in nodes[0].iter(W + "Property")] == ["ConfigRoot"] and (0, 1) in [e[:2] for e in edges]
+
+
+def test_a_stop_ends_headless_bonsai(wf):
+    # The full-screen window's teardown held up would keep Bonsai running until the agent's kill: OpenRigs.Control's
+    # EndAfterStop ends it 2 s after the stop.
+    assert wf.text.count("orcl:EndAfterStop") == 1

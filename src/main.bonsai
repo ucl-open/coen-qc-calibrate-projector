@@ -55,6 +55,12 @@
                 <orcl:Phase>Recording</orcl:Phase>
               </Combinator>
             </Expression>
+            <Expression xsi:type="Combinator">
+              <Description>Ends headless Bonsai when it is still running 2 s after the controller's stop: a window or publisher thread held up in teardown (the full-screen projector window, the live view) would keep Bonsai running until the agent's kill; exit code 1 after any other end. Nothing in the editor.</Description>
+              <Combinator xsi:type="orcl:EndAfterStop">
+                <orcl:GraceSeconds>2</orcl:GraceSeconds>
+              </Combinator>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
