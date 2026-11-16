@@ -33,7 +33,8 @@ Once the run completes, rig-control writes, into the same `calibration\`, where 
 
 - `gammalut.bmp`: one row, `Levels` pixels wide, 24-bit grey. Pixel *i* is the drive level that gives brightness (*i* + 0.5) / `Levels` of full white, above the dark screen: the input BonVision samples at that pixel's centre (rig-control's `lookup_inputs`). Each comes from the measured ramp, interpolated between the two levels around it, never falling, with black and white pinned to 0 and 1.
 - `gammalut.json`: when, who (whoever launched it, by Lab PIN), the machine, and the ramp: each level, its reading and its drive.
-- `history\`: the run's `gamma-ramp.csv` under its date (kept whether or not it could be fitted), a dated copy of the lookup and its record, and the lookup being replaced, under its own date, if it is not there already.
+- `runs\gamma\<run>\`: the run's `gamma-ramp.csv`, moved there as it was at the run's end (kept whether or not it could be fitted), and mirrored to the share's `calibration\runs\gamma\` with it.
+- `history\`: a dated copy of the lookup and its record, and the lookup being replaced, under its own date, if it is not there already.
 
 A ramp whose white is no brighter than its black is refused and no lookup is written: the photodiode is not facing the screen or not on ADC0. A run that is stopped is not fitted.
 
