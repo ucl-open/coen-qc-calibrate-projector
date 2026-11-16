@@ -1,5 +1,9 @@
 # Backlog
 
+## 2026-11-16 NoExperimentFolder (OpenRigs.Logging .16)
+
+- Done: `src\main.bonsai` includes lib-open-rigs' `NoExperimentFolder` (`SubjectId` `_projector-calibration_`, which no piece here reads) in its Settings group, in place of its own never-published `PathPrefix`. Nothing written changes: no piece logs, and `gamma-ramp.csv` is as before. `tests\test_workflow.py` holds it to `no_experiment_folder_problems`.
+
 ## 2026-11-16 Onto the lab's device pieces (lib-open-rigs 5ea5729)
 
 - Done: the board is lib's `BehaviorBoard` piece, with `ReadLabRig`, `ReadyGate` and the dome's clock `ClockFromTimestampGenerator` (Pip, 16 Nov 2026: QC workflows use the same pieces as the tasks, never a device opened by hand). `PathPrefix` declared and never published, so no piece logs. Replaces e647052's board opened by hand. The ramp, its timing, `gamma-ramp.csv` (`level`, `reading`) and the metrics are unchanged.

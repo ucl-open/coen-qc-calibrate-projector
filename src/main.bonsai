@@ -2,7 +2,6 @@
 <WorkflowBuilder Version="2.9.0"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
-                 xmlns:sys="clr-namespace:System;assembly=mscorlib"
                  xmlns:orc="clr-namespace:OpenRigs.Core;assembly=OpenRigs.Core"
                  xmlns:orcl="clr-namespace:OpenRigs.Control;assembly=OpenRigs.Control"
                  xmlns:harp="clr-namespace:Bonsai.Harp;assembly=Bonsai.Harp"
@@ -13,7 +12,7 @@
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns:orl="clr-namespace:OpenRigs.Logging;assembly=OpenRigs.Logging"
                  xmlns="https://bonsai-rx.org/2018/workflow">
-  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). The board and the clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromTimestampGenerator, ReadyGate); a calibration has no experiment folder, so PathPrefix never comes and no piece logs. DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither). Ready once the clock is set and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
+  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). The board and the clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromTimestampGenerator, ReadyGate); a calibration has no experiment folder (OpenRigs.Logging NoExperimentFolder), so no piece logs. DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither). Ready once the clock is set and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
@@ -21,7 +20,7 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Settings</Name>
-        <Description>This machine's rig.yml in the lab rig model (OpenRigs.Devices ReadLabRig, as every lab workflow reads it): RigConfigs, which the pieces take their entries from, and RigConfigDirectory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;, where the ramp is written. Stops at Start if the folder or rig.yml is missing. PathPrefix is declared and never published: a calibration has no experiment folder, so the pieces' logs, which wait for it, never start.</Description>
+        <Description>This machine's rig.yml in the lab rig model (OpenRigs.Devices ReadLabRig, as every lab workflow reads it): RigConfigs, which the pieces take their entries from, and RigConfigDirectory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;, where the ramp is written. Stops at Start if the folder or rig.yml is missing. NoExperimentFolder (OpenRigs.Logging) declares PathPrefix, never published, as a calibration has no experiment folder, so the pieces' logs, which wait for it, never start; and SubjectId, _projector-calibration_, which no piece here reads.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
@@ -30,8 +29,8 @@
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadLabRig.bonsai">
               <ConfigRoot>C:\Coen-Lab-Local\RigConfigs</ConfigRoot>
             </Expression>
-            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="sys:String">
-              <rx:Name>PathPrefix</rx:Name>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:NoExperimentFolder.bonsai">
+              <SubjectId>_projector-calibration_</SubjectId>
             </Expression>
           </Nodes>
           <Edges>

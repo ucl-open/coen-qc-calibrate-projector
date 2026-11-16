@@ -43,9 +43,8 @@ def test_every_command_is_declared(wf):
 
 
 def test_no_experiment_folder(wf):
-    declared = [n for n in wf.root.iter(W + "Expression") if lint._name(n) == "PathPrefix"]
-    assert [(n.get(XSI), n.get("TypeArguments")) for n in declared] == [("rx:BehaviorSubject", "sys:String")]
-    assert not [n for n in wf.root.iter(W + "Expression") if n.get(XSI) == "MulticastSubject" and lint._name(n) == "PathPrefix"]
+    # NoExperimentFolder's PathPrefix is never published, so no piece's log starts.
+    assert lint.no_experiment_folder_problems(wf) == []
 
 
 def test_no_launch_property_but_the_lab_ones(wf):
