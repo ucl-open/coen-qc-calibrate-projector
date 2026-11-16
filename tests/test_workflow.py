@@ -26,7 +26,7 @@ def test_the_devices_it_drives(wf):
 
 
 def test_no_board_opened_by_hand(wf):
-    assert not [n for n in wf.root.iter(W + "Expression") if lint.kind(n).endswith(":Device")]
+    assert lint.hand_opened_devices(wf) == []
 
 
 def test_no_shared_mapping(wf):
@@ -51,7 +51,7 @@ def test_no_launch_property_but_the_lab_ones(wf):
     # PortName came from rig-control until 16 Nov 2026; the board piece reads rig.yml's port itself.
     top = lint.nodes_and_edges(lint.child(wf.root, W + "Workflow"))[0]
     names = {p.get("DisplayName") or p.get("Name") for n in top if n.get(XSI) == "ExternalizedMapping" for p in n.iter(W + "Property")}
-    assert names == {"ConfigRoot", "SubjectId", "SessionId", "DisplayDevice", "Levels"}
+    assert names == {"ConfigRoot", "SubjectId", "SessionId", "LaunchId", "DisplayDevice", "Levels"}
 
 
 def test_the_ramp_file_keeps_its_columns(wf):
@@ -60,11 +60,12 @@ def test_the_ramp_file_keeps_its_columns(wf):
 
 
 def test_live_view_is_last_and_fed_by_nothing(wf):
-    # It streams its devices, as every lab workflow does. StreamDevices finds only subjects built before it, so nothing
-    # feeds it and nothing follows it.
-    nodes, edges = lint.nodes_and_edges(wf.root.find(W + "Workflow"))
-    (live,) = [i for i, n in enumerate(nodes) if n.get(XSI) == "lv:StreamDevices"]
-    assert live == len(nodes) - 1 and not [e for e in edges if live in e[:2]]
+    assert lint.live_view_problems(wf) == []
+
+
+def test_the_launch_id_reaches_the_controller(wf):
+    assert lint.launch_id_problems(wf) == []
+
 
 def test_read_lab_rig_and_no_experiment_folder_are_top_level(wf):
     # As in the preflights and the tasks: ConfigRoot's mapping feeds ReadLabRig, then NoExperimentFolder, first of all.

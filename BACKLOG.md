@@ -4,9 +4,9 @@ History is in `git log`.
 
 ## Open
 
+- Rig check on one dome before relying on the lib window (`RawProjectorDisplay`, which replaced the hand-built `Display`; ProjectorWindowTests open a window, so CI skips them). Before updating, run Calibrate with the old window and keep `gamma-ramp.csv` and `gammalut.bmp`. After: black at Start, each level fills the image, Finished; the ramps agree within photodiode noise and the LUTs within 1-2 values; Stop mid-ramp closes the window and exits; `DisplayDevice=Sixth` stops at Start naming `RawProjectorDisplay`.
 - Run it on a dome: it builds, and app-rig-control's fit is tested on synthetic ramps; the first run needs someone at the dome.
 - Mesh mapping joins it here; until then it is done by hand with av-dome's `src\MeshMapping`.
-- Its window is its own (`Display`: CreateWindow, OrthographicView) because lib's `ProjectorDisplay` always applies mesh mapping and the gamma table, which a gamma calibration must not. A raw display in lib (the window, view and render-thread disposal without the two corrections) would let it use the lab's window and its start-up deadlock fix.
 
 ## Decided
 

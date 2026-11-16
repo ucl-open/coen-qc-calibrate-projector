@@ -7,13 +7,11 @@
                  xmlns:harp="clr-namespace:Bonsai.Harp;assembly=Bonsai.Harp"
                  xmlns:beh="clr-namespace:Harp.Behavior;assembly=Harp.Behavior"
                  xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
-                 xmlns:gl="clr-namespace:Bonsai.Shaders;assembly=Bonsai.Shaders"
-                 xmlns:res="clr-namespace:Bonsai.Resources;assembly=Bonsai.System"
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns:orl="clr-namespace:OpenRigs.Logging;assembly=OpenRigs.Logging"
                  xmlns:lv="clr-namespace:OpenRigs.LiveView;assembly=OpenRigs.LiveView"
                  xmlns="https://bonsai-rx.org/2018/workflow">
-  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). The board and the clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromTimestampGenerator, ReadyGate); a calibration has no experiment folder (OpenRigs.Logging NoExperimentFolder), so no piece logs. DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither). Ready once the clock is set and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
+  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). The board and the clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromTimestampGenerator, ReadyGate); a calibration has no experiment folder (OpenRigs.Logging NoExperimentFolder), so no piece logs. The window is OpenRigs.Vision's RawProjectorDisplay: the projector's window with no mesh mapping and no gamma correction, black until a level is drawn on DrawStimuli. DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither); a display the machine lacks stops the workflow at Start. Ready once the clock is set and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
@@ -28,6 +26,7 @@
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="SubjectId" />
         <Property Name="SessionId" />
+        <Property Name="LaunchId" Description="The launcher's run id; the launch's own, from rig-control." />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Initialization</Name>
@@ -37,10 +36,12 @@
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="SubjectId" />
               <Property Name="SessionId" />
+              <Property Name="LaunchId" />
             </Expression>
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Control:ExperimentControl.bonsai">
               <SubjectId />
               <SessionId />
+              <LaunchId />
               <ControlEndpoint>@tcp://127.0.0.1:5561</ControlEndpoint>
               <Parameters />
               <Commands />
@@ -123,78 +124,13 @@
         </Workflow>
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
-        <Property Name="DisplayDevice" DisplayName="DisplayDevice" Description="The display the dome projector is on (BonVision CreateWindow). First by default, the display the lab's dome windows open on; rig-control does not pass it, so a dome whose projector is not Windows' first display needs it in calibrations.toml's [gamma.rig] and in that dome's own launch." />
+        <Property Name="DisplayDevice" DisplayName="DisplayDevice" Description="The display the dome projector is on (OpenRigs.Vision RawProjectorDisplay). First by default, the display the lab's dome windows open on; rig-control does not pass it, so a dome whose projector is not Windows' first display needs it in calibrations.toml's [gamma.rig] and in that dome's own launch." />
       </Expression>
-      <Expression xsi:type="GroupWorkflow">
-        <Name>Display</Name>
-        <Description>A full-screen BonVision window on DisplayDevice, black until Go, with no mesh mapping and no gamma correction, so the ramp drives the projector's raw levels. DrawStimuli is its frame, in a view from -1 to 1 both ways.</Description>
-        <Workflow>
-          <Nodes>
-            <Expression xsi:type="ExternalizedMapping">
-              <Property Name="DisplayDevice" DisplayName="DisplayDevice" />
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="gl:CreateWindow">
-                <gl:Width>1920</gl:Width>
-                <gl:Height>1080</gl:Height>
-                <gl:VSync>On</gl:VSync>
-                <gl:SwapSync>false</gl:SwapSync>
-                <gl:ClearColor>Black</gl:ClearColor>
-                <gl:ClearMask>DepthBufferBit ColorBufferBit</gl:ClearMask>
-                <gl:CursorVisible>false</gl:CursorVisible>
-                <gl:Location xsi:nil="true" />
-                <gl:WindowBorder>Resizable</gl:WindowBorder>
-                <gl:WindowState>Fullscreen</gl:WindowState>
-                <gl:DisplayDevice>First</gl:DisplayDevice>
-                <gl:TargetRenderFrequency>0</gl:TargetRenderFrequency>
-                <gl:TargetUpdateFrequency xsi:nil="true" />
-                <gl:RenderState />
-                <gl:GraphicsMode>
-                  <gl:ColorFormat>
-                    <gl:Red>8</gl:Red>
-                    <gl:Green>8</gl:Green>
-                    <gl:Blue>8</gl:Blue>
-                    <gl:Alpha>8</gl:Alpha>
-                  </gl:ColorFormat>
-                  <gl:Depth>16</gl:Depth>
-                  <gl:Stencil>0</gl:Stencil>
-                  <gl:Samples>0</gl:Samples>
-                  <gl:AccumulatorFormat>
-                    <gl:Red>0</gl:Red>
-                    <gl:Green>0</gl:Green>
-                    <gl:Blue>0</gl:Blue>
-                    <gl:Alpha>0</gl:Alpha>
-                  </gl:AccumulatorFormat>
-                  <gl:Buffers>2</gl:Buffers>
-                  <gl:Stereo>false</gl:Stereo>
-                </gl:GraphicsMode>
-              </Combinator>
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="BonVision:Primitives.BonVisionResources.bonsai" />
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="res:LoadResources" />
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="gl:RenderFrame" />
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="BonVision:Environment.OrthographicView.bonsai">
-              <Left>-1</Left>
-              <Right>1</Right>
-              <Bottom>-1</Bottom>
-              <Top>1</Top>
-            </Expression>
-            <Expression xsi:type="rx:PublishSubject">
-              <Name>DrawStimuli</Name>
-            </Expression>
-          </Nodes>
-          <Edges>
-            <Edge From="0" To="1" Label="Source1" />
-            <Edge From="1" To="2" Label="Source1" />
-            <Edge From="2" To="3" Label="Source1" />
-            <Edge From="4" To="5" Label="Source1" />
-            <Edge From="5" To="6" Label="Source1" />
-          </Edges>
-        </Workflow>
+      <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Vision:RawProjectorDisplay.bonsai">
+        <DisplayDevice>First</DisplayDevice>
+        <WindowState>Fullscreen</WindowState>
+        <Width>1920</Width>
+        <Height>1080</Height>
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="Levels" DisplayName="Levels" Description="How many grey levels the ramp shows, evenly from black to white; also the lookup table's width. 80 by default, as the lab's lookup tables have." />
@@ -290,10 +226,10 @@
                     <Name>DrawStimuli</Name>
                   </Expression>
                   <Expression xsi:type="IncludeWorkflow" Path="BonVision:Primitives.DrawQuad.bonsai">
-                    <ExtentX>2</ExtentX>
-                    <ExtentY>2</ExtentY>
+                    <ExtentX>270</ExtentX>
+                    <ExtentY>105</ExtentY>
                     <LocationX>0</LocationX>
-                    <LocationY>0</LocationY>
+                    <LocationY>30</LocationY>
                     <Layer>0</Layer>
                     <Angle>0</Angle>
                     <ColorR>0</ColorR>
