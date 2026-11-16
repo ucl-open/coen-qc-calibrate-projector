@@ -78,3 +78,14 @@ def test_a_stop_ends_headless_bonsai(wf):
     # The full-screen window's teardown held up would keep Bonsai running until the agent's kill: OpenRigs.Control's
     # EndAfterStop ends it 2 s after the stop.
     assert wf.text.count("orcl:EndAfterStop") == 1
+
+def test_the_projector_window_is_in_hardware(wf):
+    # As the domes' DomeHardware has the projector: RawProjectorDisplay inside Hardware, its DisplayDevice mapped down
+    # from the top level (audit QF16, 16 Nov 2026).
+    nodes, _ = lint.nodes_and_edges(lint.child(wf.root, W + "Workflow"))
+    assert "OpenRigs.Vision:RawProjectorDisplay.bonsai" not in [n.get("Path") for n in nodes]
+    hardware = next(n for n in nodes if n.findtext(W + "Name") == "Hardware")
+    inner, edges = lint.nodes_and_edges(hardware.find(W + "Workflow"))
+    (display,) = [i for i, n in enumerate(inner) if n.get("Path") == "OpenRigs.Vision:RawProjectorDisplay.bonsai"]
+    (mapping,) = [a for a, b, _ in edges if b == display]
+    assert [p.get("Name") for p in inner[mapping].iter(W + "Property")] == ["DisplayDevice"]

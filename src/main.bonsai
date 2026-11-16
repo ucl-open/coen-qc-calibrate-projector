@@ -68,9 +68,12 @@
           </Edges>
         </Workflow>
       </Expression>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="DisplayDevice" DisplayName="DisplayDevice" Description="The display the dome projector is on (OpenRigs.Vision RawProjectorDisplay). First by default, the display the lab's dome windows open on; rig-control does not pass it, so a dome whose projector is not Windows' first display needs it in calibrations.toml's [gamma.rig] and in that dome's own launch." />
+      </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Hardware</Name>
-        <Description>The lab's device pieces, as in a session (lib-open-rigs building-blocks), never a board opened by hand (Pip, 16 Nov 2026): the Ready gate (ReadyGate), the behavior board BehaviorBoard-Main on rig.yml's port (BehaviorBoard) and its time, read and never set (ClockFromBoard, SetClock false: the board's time, which on a dome follows the timestamp generator; the ramp is timed on Rx timers alone). Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the board's time is read (HarpClockRead) and the first ADC0 reading has arrived (CalibrationReady, this workflow's own stage, ReadyGate's WorkflowStages), so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
+        <Description>The lab's device pieces, as in a session (lib-open-rigs building-blocks), never a board opened by hand (Pip, 16 Nov 2026): the Ready gate (ReadyGate), the behavior board BehaviorBoard-Main on rig.yml's port (BehaviorBoard) and its time, read and never set (ClockFromBoard, SetClock false: the board's time, which on a dome follows the timestamp generator; the ramp is timed on Rx timers alone). Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the board's time is read (HarpClockRead) and the first ADC0 reading has arrived (CalibrationReady, this workflow's own stage, ReadyGate's WorkflowStages), so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window). The projector's window is here too, as the domes' DomeHardware has it: OpenRigs.Vision RawProjectorDisplay on DisplayDevice, full screen with no mesh mapping and no gamma correction.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadyGate.bonsai">
@@ -119,8 +122,18 @@
             <Expression xsi:type="MulticastSubject">
               <Name>ReadyStages</Name>
             </Expression>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="DisplayDevice" />
+            </Expression>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Vision:RawProjectorDisplay.bonsai">
+              <DisplayDevice>First</DisplayDevice>
+              <WindowState>Fullscreen</WindowState>
+              <Width>1920</Width>
+              <Height>1080</Height>
+            </Expression>
           </Nodes>
           <Edges>
+            <Edge From="12" To="13" Label="Source1" />
             <Edge From="3" To="4" Label="Source1" />
             <Edge From="4" To="5" Label="Source1" />
             <Edge From="5" To="6" Label="Source1" />
@@ -130,15 +143,6 @@
             <Edge From="10" To="11" Label="Source1" />
           </Edges>
         </Workflow>
-      </Expression>
-      <Expression xsi:type="ExternalizedMapping">
-        <Property Name="DisplayDevice" DisplayName="DisplayDevice" Description="The display the dome projector is on (OpenRigs.Vision RawProjectorDisplay). First by default, the display the lab's dome windows open on; rig-control does not pass it, so a dome whose projector is not Windows' first display needs it in calibrations.toml's [gamma.rig] and in that dome's own launch." />
-      </Expression>
-      <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Vision:RawProjectorDisplay.bonsai">
-        <DisplayDevice>First</DisplayDevice>
-        <WindowState>Fullscreen</WindowState>
-        <Width>1920</Width>
-        <Height>1080</Height>
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="Levels" DisplayName="Levels" Description="How many grey levels the ramp shows, evenly from black to white; also the lookup table's width. 80 by default, as the lab's lookup tables have." />
@@ -382,8 +386,8 @@
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
       <Edge From="3" To="4" Label="Source1" />
-      <Edge From="6" To="7" Label="Source1" />
-      <Edge From="8" To="9" Label="Source1" />
+      <Edge From="5" To="6" Label="Source1" />
+      <Edge From="7" To="8" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
