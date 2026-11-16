@@ -1,5 +1,9 @@
 # Backlog
 
+## 2026-11-16 ReadyGate's WorkflowStages (OpenRigs.Core .22, Devices .26)
+
+- Done (Pip, 16 Nov 2026): `src\main.bonsai` names its own stage `PhotodiodeReading` in ReadyGate's new `WorkflowStages`, and `ReadyWaitsFor` is the pieces' `HarpClockSet` alone. Ready waits for the same stages as before. `tests\test_workflow.py` expects no `hardware_problems`: lint holds `WorkflowStages` equal to the workflow's own `AnnounceStage` nodes, so the exception for the workflow's own stage is gone.
+
 ## 2026-11-16 NoExperimentFolder (OpenRigs.Logging .16)
 
 - Done: `src\main.bonsai` includes lib-open-rigs' `NoExperimentFolder` (`SubjectId` `_projector-calibration_`, which no piece here reads) in its Settings group, in place of its own never-published `PathPrefix`. Nothing written changes: no piece logs, and `gamma-ramp.csv` is as before. `tests\test_workflow.py` holds it to `no_experiment_folder_problems`.
@@ -10,7 +14,7 @@
 - Changed: `PortName` is no longer a launch property; the board's port comes from rig.yml. app-rig-control's `calibrations.toml` `[gamma.rig] PortName` must go in the same sitting, or the agent refuses the launch (an unknown launch property).
 - Changed: the board's clock is now set (the generator's UTC clock, as in a session), and Ready also waits for it; a generator that does not answer stops the workflow, naming it.
 - Done: the ramp's level reaches DrawQuad's colour through its own `Item1` (`shared_mapping_problems`). `tests\test_workflow.py` added, with pytest.
-- Suggestion for lib: `hardware_problems` knows only the pieces' Ready stages; this workflow announces its own (`PhotodiodeReading`), so the test expects that one problem.
+- Done 16 Nov 2026 (ReadyGate's WorkflowStages, above). Suggestion for lib: `hardware_problems` knows only the pieces' Ready stages; this workflow announces its own (`PhotodiodeReading`), so the test expects that one problem.
 
 ## 2026-11-15 Rig hardware as device pieces (lib-open-rigs)
 

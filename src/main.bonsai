@@ -75,11 +75,12 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Hardware</Name>
-        <Description>The lab's device pieces, as in a session (lib-open-rigs building-blocks), never a board opened by hand (Pip, 16 Nov 2026): the Ready gate (ReadyGate), the dome's clock (ClockFromTimestampGenerator, TimestampGeneratorGen3-Main) and the behavior board BehaviorBoard-Main on rig.yml's port (BehaviorBoard). Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the clock is set and the first ADC0 reading has arrived (PhotodiodeReading, this workflow's own stage), so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
+        <Description>The lab's device pieces, as in a session (lib-open-rigs building-blocks), never a board opened by hand (Pip, 16 Nov 2026): the Ready gate (ReadyGate), the dome's clock (ClockFromTimestampGenerator, TimestampGeneratorGen3-Main) and the behavior board BehaviorBoard-Main on rig.yml's port (BehaviorBoard). Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the clock is set and the first ADC0 reading has arrived (PhotodiodeReading, this workflow's own stage, ReadyGate's WorkflowStages), so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadyGate.bonsai">
-              <ReadyWaitsFor>HarpClockSet, PhotodiodeReading</ReadyWaitsFor>
+              <ReadyWaitsFor>HarpClockSet</ReadyWaitsFor>
+              <WorkflowStages>PhotodiodeReading</WorkflowStages>
             </Expression>
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ClockFromTimestampGenerator.bonsai">
               <Name>TimestampGeneratorGen3-Main</Name>

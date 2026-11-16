@@ -16,9 +16,9 @@ def wf():
 
 
 def test_the_hardware_is_the_lab_pieces(wf):
-    # The one problem is the workflow's own stage: Ready also waits for the photodiode's first reading, a stage
-    # hardware_problems does not know.
-    assert lint.hardware_problems(wf) == ["ReadyGate's ReadyWaitsFor is HarpClockSet, PhotodiodeReading, not HarpClockSet"]
+    # Ready also waits for the photodiode's first reading, the workflow's own stage (ReadyGate's WorkflowStages).
+    assert lint.hardware_problems(wf) == []
+    assert dict(lint.hardware(wf))[lint.READY_GATE]["WorkflowStages"] == "PhotodiodeReading"
 
 
 def test_the_devices_it_drives(wf):
