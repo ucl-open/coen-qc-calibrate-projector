@@ -12,3 +12,7 @@ History is in `git log`.
 
 - The board and clock are lib's pieces, never a board opened by hand (Pip, 16 Nov 2026); no experiment folder (`NoExperimentFolder`); `PortName` is no launch property.
 - Bonsai measures, app-rig-control computes: the workflow writes `gamma-ramp.csv` (OpenRigs.Logging `CsvWriter`) and nothing else.
+
+## Audit round 1 (16 Nov 2026): not recommended
+
+- `rx:Average` error not named (`src\main.bonsai:278`): naming it needs a lib operator.
