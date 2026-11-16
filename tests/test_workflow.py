@@ -22,7 +22,7 @@ def test_the_hardware_is_the_lab_pieces(wf):
 
 
 def test_the_devices_it_drives(wf):
-    assert lint.required_devices(wf) == [("TimestampGeneratorGen3-Main", "timestampGeneratorGen3"), ("BehaviorBoard-Main", "behaviorBoard")]
+    assert lint.required_devices(wf) == [("BehaviorBoard-Main", "behaviorBoard")]
 
 
 def test_no_board_opened_by_hand(wf):

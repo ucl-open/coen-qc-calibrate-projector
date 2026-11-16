@@ -11,7 +11,7 @@
                  xmlns:orl="clr-namespace:OpenRigs.Logging;assembly=OpenRigs.Logging"
                  xmlns:lv="clr-namespace:OpenRigs.LiveView;assembly=OpenRigs.LiveView"
                  xmlns="https://bonsai-rx.org/2018/workflow">
-  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). The board and the clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromTimestampGenerator, ReadyGate); a calibration has no experiment folder (OpenRigs.Logging NoExperimentFolder), so no piece logs. The window is OpenRigs.Vision's RawProjectorDisplay: the projector's window with no mesh mapping and no gamma correction, black until a level is drawn on DrawStimuli. DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither); a display the machine lacks stops the workflow at Start. Ready once the clock is set and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
+  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). The board and its clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromBoard with SetClock false, ReadyGate); a calibration has no experiment folder (OpenRigs.Logging NoExperimentFolder), so no piece logs. The window is OpenRigs.Vision's RawProjectorDisplay: the projector's window with no mesh mapping and no gamma correction, black until a level is drawn on DrawStimuli. DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither); a display the machine lacks stops the workflow at Start. Ready once the board's time is read and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
@@ -63,22 +63,23 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Hardware</Name>
-        <Description>The lab's device pieces, as in a session (lib-open-rigs building-blocks), never a board opened by hand (Pip, 16 Nov 2026): the Ready gate (ReadyGate), the dome's clock (ClockFromTimestampGenerator, TimestampGeneratorGen3-Main) and the behavior board BehaviorBoard-Main on rig.yml's port (BehaviorBoard). Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the clock is set and the first ADC0 reading has arrived (CalibrationReady, this workflow's own stage, ReadyGate's WorkflowStages), so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
+        <Description>The lab's device pieces, as in a session (lib-open-rigs building-blocks), never a board opened by hand (Pip, 16 Nov 2026): the Ready gate (ReadyGate), the behavior board BehaviorBoard-Main on rig.yml's port (BehaviorBoard) and its time, read and never set (ClockFromBoard, SetClock false: the board's time, which on a dome follows the timestamp generator; the ramp is timed on Rx timers alone). Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the board's time is read (HarpClockRead) and the first ADC0 reading has arrived (CalibrationReady, this workflow's own stage, ReadyGate's WorkflowStages), so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadyGate.bonsai">
-              <PieceStages>HarpClockSet</PieceStages>
+              <PieceStages>HarpClockRead</PieceStages>
               <WorkflowStages>CalibrationReady</WorkflowStages>
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ClockFromTimestampGenerator.bonsai">
-              <Name>TimestampGeneratorGen3-Main</Name>
-              <CommandsSubjectName>TimestampGeneratorGen3-Main.Commands</CommandsSubjectName>
-              <DataSubjectName>TimestampGeneratorGen3-Main.Data</DataSubjectName>
             </Expression>
             <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.BehaviorBoard.bonsai">
               <Name>BehaviorBoard-Main</Name>
               <CommandsSubjectName>BehaviorBoard-Main.Commands</CommandsSubjectName>
               <DataSubjectName>BehaviorBoard-Main.Data</DataSubjectName>
+            </Expression>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.ClockFromBoard.bonsai">
+              <Board>BehaviorBoard-Main</Board>
+              <SetClock>false</SetClock>
+              <BoardDataSubjectName>BehaviorBoard-Main.Data</BoardDataSubjectName>
+              <BoardCommandsSubjectName>BehaviorBoard-Main.Commands</BoardCommandsSubjectName>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>BehaviorBoard-Main.Data</Name>
