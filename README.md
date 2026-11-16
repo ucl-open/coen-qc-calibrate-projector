@@ -13,7 +13,7 @@ This workflow drives the display and the board and writes the raw ramp, nothing 
 ## What It Takes
 
 - **A photodiode on the behavior board's ADC0**, facing the screen. The workflow reads `AnalogInput0` (1 kHz, ADC counts). Nothing else on the domes uses ADC0 today. The dome's sync-square photodiode is on a digital input (DIPort0), which says only light or dark, so it cannot measure brightness.
-- **`PortName`, from rig-control**, which reads `behaviorBoard: main: portName` from the rig's own rig.yml (`<ConfigRoot>\<MACHINE-NAME>\rig.yml`) and passes it at launch; the workflow itself reads no rig.yml.
+- **The rig's own rig.yml** (`<ConfigRoot>\<MACHINE-NAME>\rig.yml`), read by lib-open-rigs' `ReadLabRig`. The hardware is the lab's device pieces, as in a session, never a board opened by hand (Pip, 16 Nov 2026): `ReadyGate`, `ClockFromTimestampGenerator` (`TimestampGeneratorGen3-Main`) and `BehaviorBoard` (`BehaviorBoard-Main`), each from its rig.yml entry. A calibration has no experiment folder: `PathPrefix` is declared and never published, so no piece logs. Ready waits for the clock and the workflow's own stage, `PhotodiodeReading` (the first ADC0 reading). `PortName` is no longer a launch property (until 16 Nov 2026 rig-control passed rig.yml's port).
 - **`DisplayDevice`** stays at `First`, the display the lab's dome windows open on: rig-control does not pass it. A dome whose projector is not Windows' first display needs it added to calibrations.toml's `[gamma.rig]` and to that dome's own launch.
 - **`Levels`** (default 80, the width of the lab's lookup tables). Each level shows for a fixed 0.5 s and is read from 0.2 s to 0.45 s after it appears; the period is not a property, so it cannot be set shorter than the read window.
 
@@ -21,7 +21,7 @@ This workflow drives the display and the board and writes the raw ramp, nothing 
 
 1. Put the photodiode on the screen and into the board's ADC0. Keep the room dark.
 2. On the Calibrations page, press Projector Gamma's **Calibrate** and give your Lab PIN. The projector goes black: the window is full screen with no mesh mapping and no gamma correction, so the ramp drives the projector's raw levels.
-3. **Ready** once the photodiode's first reading arrives from ADC0 (a board sending no analog data never gets there). Press **Start Calibration**.
+3. **Ready** once the clock is set and the photodiode's first reading arrives from ADC0 (a board sending no analog data never gets there). Press **Start Calibration**.
 4. After 1 s of black, the levels from black to white, one every 0.5 s (80 levels take about 41 s). The `level` metric is the one shown; the `reading` metric is the last level read and its photodiode mean, `0.513 412.37` (both in one metric, since rig-control polls once a second and the level moves on every 0.5 s), which rig-control plots as the run goes.
 5. **Finished** once every level is written; the `points` metric says how many. rig-control then fits the ramp and the page shows the result: the levels, the gamma that fits the ramp (brightness as level to that power), and the dark and white readings. Or why nothing was written.
 
@@ -41,4 +41,4 @@ A ramp whose white is no brighter than its black is refused and no lookup is wri
 
 `scripts\deploy.ps1` (or `.bonsai\Setup.ps1`) installs Bonsai and the packages: it syncs the `.venv` from `uv.lock` (uv must be on PATH), then runs the lab's one Bonsai setup from the open-rigs it pins, which also removes package folders `Bonsai.config` no longer names. The lab's packages come from lib-open-rigs; never bump them here by hand.
 
-Check a change without launching Bonsai: `C:\Github\Coen-Lab\app-rig-setup\workflows\check-workflow-builds.ps1 -Repo <this repo>`.
+Check a change without launching Bonsai: `uv run pytest` (`tests\test_workflow.py`, the lab's `workflow_lint` rules) and `C:\Github\Coen-Lab\app-rig-setup\workflows\check-workflow-builds.ps1 -Repo <this repo>`.

@@ -8,8 +8,14 @@ dependencies = [
   "open-rigs",
 ]
 
+[dependency-groups]
+dev = ["pytest"]
+
 [tool.uv]
 package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
 
 [tool.uv.sources]
 # lib-open-rigs' update-workflows moves this pin.

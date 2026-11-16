@@ -2,6 +2,7 @@
 <WorkflowBuilder Version="2.9.0"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
+                 xmlns:sys="clr-namespace:System;assembly=mscorlib"
                  xmlns:orc="clr-namespace:OpenRigs.Core;assembly=OpenRigs.Core"
                  xmlns:orcl="clr-namespace:OpenRigs.Control;assembly=OpenRigs.Control"
                  xmlns:harp="clr-namespace:Bonsai.Harp;assembly=Bonsai.Harp"
@@ -12,7 +13,7 @@
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns:orl="clr-namespace:OpenRigs.Logging;assembly=OpenRigs.Logging"
                  xmlns="https://bonsai-rx.org/2018/workflow">
-  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). rig-control's Calibrations page launches it with the board's PortName from rig.yml; DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither). Ready once the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
+  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). The board and the clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromTimestampGenerator, ReadyGate); a calibration has no experiment folder, so PathPrefix never comes and no piece logs. DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither). Ready once the clock is set and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
@@ -20,24 +21,21 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Settings</Name>
-        <Description>RigConfigDirectory is &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;, where the ramp is written. Fails at startup if the machine has no configuration directory.</Description>
+        <Description>This machine's rig.yml in the lab rig model (OpenRigs.Devices ReadLabRig, as every lab workflow reads it): RigConfigs, which the pieces take their entries from, and RigConfigDirectory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;, where the ramp is written. Stops at Start if the folder or rig.yml is missing. PathPrefix is declared and never published: a calibration has no experiment folder, so the pieces' logs, which wait for it, never start.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="ConfigRoot" DisplayName="ConfigRoot" />
             </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="orc:ResolveRigConfigDirectory">
-                <orc:ConfigRoot>C:\Coen-Lab-Local\RigConfigs</orc:ConfigRoot>
-              </Combinator>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadLabRig.bonsai">
+              <ConfigRoot>C:\Coen-Lab-Local\RigConfigs</ConfigRoot>
             </Expression>
-            <Expression xsi:type="rx:AsyncSubject">
-              <Name>RigConfigDirectory</Name>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="sys:String">
+              <rx:Name>PathPrefix</rx:Name>
             </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
-            <Edge From="1" To="2" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -76,51 +74,23 @@
           </Edges>
         </Workflow>
       </Expression>
-      <Expression xsi:type="ExternalizedMapping">
-        <Property Name="PortName" DisplayName="PortName" Description="The behavior board's serial port: rig.yml's behaviorBoard: main: portName, which rig-control gives at launch." />
-      </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Hardware</Name>
-        <Description>The behavior board on PortName. Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the first ADC0 reading arrives, so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
+        <Description>The lab's device pieces, as in a session (lib-open-rigs building-blocks), never a board opened by hand (Pip, 16 Nov 2026): the Ready gate (ReadyGate), the dome's clock (ClockFromTimestampGenerator, TimestampGeneratorGen3-Main) and the behavior board BehaviorBoard-Main on rig.yml's port (BehaviorBoard). Its AnalogInput0 (1 kHz, in ADC counts) is published as Photodiode: plug the photodiode facing the screen into the board's ADC0 for the run. Ready once the clock is set and the first ADC0 reading has arrived (PhotodiodeReading, this workflow's own stage), so a board sending no analog data stays short of Ready instead of failing at the first level (an empty reading window).</Description>
         <Workflow>
           <Nodes>
-            <Expression xsi:type="ExternalizedMapping">
-              <Property Name="PortName" DisplayName="PortName" />
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadyGate.bonsai">
+              <ReadyWaitsFor>HarpClockSet, PhotodiodeReading</ReadyWaitsFor>
             </Expression>
-            <Expression xsi:type="GroupWorkflow">
-              <Name>BehaviorBoard</Name>
-              <Description>The behavior board on PortName, opened directly (Harp.Behavior Device): a calibration has no experiment folder, so lib-open-rigs' BehaviorBoard piece, which logs into one, does not fit. Commands on BehaviorBoard-Main.Commands, messages on BehaviorBoard-Main.Data.</Description>
-              <Workflow>
-                <Nodes>
-                  <Expression xsi:type="rx:BehaviorSubject" TypeArguments="harp:HarpMessage">
-                    <rx:Name>BehaviorBoard-Main.Commands</rx:Name>
-                  </Expression>
-                  <Expression xsi:type="ExternalizedMapping">
-                    <Property Name="PortName" />
-                  </Expression>
-                  <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="beh:Device">
-                      <harp:OperationMode>Active</harp:OperationMode>
-                      <harp:OperationLed>Off</harp:OperationLed>
-                      <harp:DumpRegisters>true</harp:DumpRegisters>
-                      <harp:VisualIndicators>Off</harp:VisualIndicators>
-                      <harp:Heartbeat>Enabled</harp:Heartbeat>
-                      <harp:IgnoreErrors>false</harp:IgnoreErrors>
-                      <harp:PortName>COMx</harp:PortName>
-                    </Combinator>
-                  </Expression>
-                  <Expression xsi:type="rx:PublishSubject">
-                    <Name>BehaviorBoard-Main.Data</Name>
-                  </Expression>
-                  <Expression xsi:type="WorkflowOutput" />
-                </Nodes>
-                <Edges>
-                  <Edge From="0" To="2" Label="Source1" />
-                  <Edge From="1" To="2" Label="Source2" />
-                  <Edge From="2" To="3" Label="Source1" />
-                  <Edge From="3" To="4" Label="Source1" />
-                </Edges>
-              </Workflow>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ClockFromTimestampGenerator.bonsai">
+              <Name>TimestampGeneratorGen3-Main</Name>
+              <CommandsSubjectName>TimestampGeneratorGen3-Main.Commands</CommandsSubjectName>
+              <DataSubjectName>TimestampGeneratorGen3-Main.Data</DataSubjectName>
+            </Expression>
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.BehaviorBoard.bonsai">
+              <Name>BehaviorBoard-Main</Name>
+              <CommandsSubjectName>BehaviorBoard-Main.Commands</CommandsSubjectName>
+              <DataSubjectName>BehaviorBoard-Main.Data</DataSubjectName>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>BehaviorBoard-Main.Data</Name>
@@ -146,19 +116,22 @@
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="orcl:ReportPhase">
-                <orcl:Phase>Ready</orcl:Phase>
+              <Combinator xsi:type="orc:AnnounceStage">
+                <orc:Stage>PhotodiodeReading</orc:Stage>
               </Combinator>
+            </Expression>
+            <Expression xsi:type="MulticastSubject">
+              <Name>ReadyStages</Name>
             </Expression>
           </Nodes>
           <Edges>
-            <Edge From="0" To="1" Label="Source1" />
-            <Edge From="2" To="3" Label="Source1" />
             <Edge From="3" To="4" Label="Source1" />
             <Edge From="4" To="5" Label="Source1" />
             <Edge From="5" To="6" Label="Source1" />
-            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="6" To="7" Label="Source1" />
             <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="10" Label="Source1" />
+            <Edge From="10" To="11" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -293,7 +266,7 @@
             </Expression>
             <Expression xsi:type="rx:SelectMany">
               <Name>Ramp</Name>
-              <Description>The levels, one every 0.5 s after 1 s, each drawn full screen and measured; each (level, reading) pair once it is read, also reported as the reading metric ("0.513 412.37": both in one, since rig-control polls once a second), completing after the last.</Description>
+              <Description>The levels, one every 0.5 s after 1 s, each drawn full screen and measured; each (level, reading) pair once it is read, also reported as the reading metric ("0.513 412.37": both in one, since rig-control polls once a second), completing after the last. The grey level reaches DrawQuad's colour through its own Item1 (workflow_lint shared_mapping_problems): a PropertyMapping fed by a node with other successors is set only after its target has read its properties.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
@@ -408,13 +381,17 @@
                       <orcl:Name>reading</orcl:Name>
                     </Combinator>
                   </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Item1</Selector>
+                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="1" To="2" Label="Source1" />
                   <Edge From="2" To="4" Label="Source1" />
                   <Edge From="3" To="4" Label="Source2" />
                   <Edge From="4" To="5" Label="Source1" />
-                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="4" To="15" Label="Source1" />
+                  <Edge From="15" To="6" Label="Source1" />
                   <Edge From="7" To="8" Label="Source1" />
                   <Edge From="6" To="8" Label="Source2" />
                   <Edge From="5" To="9" Label="Source1" />
@@ -467,9 +444,8 @@
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
       <Edge From="2" To="3" Label="Source1" />
-      <Edge From="4" To="5" Label="Source1" />
-      <Edge From="6" To="7" Label="Source1" />
-      <Edge From="8" To="9" Label="Source1" />
+      <Edge From="5" To="6" Label="Source1" />
+      <Edge From="7" To="8" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
