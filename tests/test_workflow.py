@@ -48,7 +48,7 @@ def test_no_experiment_folder(wf):
 
 
 def test_no_launch_property_but_the_lab_ones(wf):
-    # PortName came from rig-control until 16 Nov 2026; the board piece reads rig.yml's port itself.
+    # The board piece reads rig.yml's port itself, so rig-control gives no PortName.
     top = lint.nodes_and_edges(lint.child(wf.root, W + "Workflow"))[0]
     names = {p.get("DisplayName") or p.get("Name") for n in top if n.get(XSI) == "ExternalizedMapping" for p in n.iter(W + "Property")}
     assert names == {"ConfigRoot", "SubjectId", "SessionId", "LaunchId", "DisplayDevice", "Levels"}
@@ -81,7 +81,7 @@ def test_a_stop_ends_headless_bonsai(wf):
 
 def test_the_projector_window_is_in_hardware(wf):
     # As the domes' DomeHardware has the projector: RawProjectorDisplay inside Hardware, its DisplayDevice mapped down
-    # from the top level (audit QF16, 16 Nov 2026).
+    # from the top level.
     nodes, _ = lint.nodes_and_edges(lint.child(wf.root, W + "Workflow"))
     assert "OpenRigs.Vision:RawProjectorDisplay.bonsai" not in [n.get("Path") for n in nodes]
     hardware = next(n for n in nodes if n.findtext(W + "Name") == "Hardware")
