@@ -22,7 +22,6 @@
         <ConfigRoot>C:\Coen-Lab-Local\RigConfigs</ConfigRoot>
       </Expression>
       <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:NoExperimentFolder.bonsai">
-        <SubjectId>_projector-calibration_</SubjectId>
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="SubjectId" />
