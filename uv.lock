@@ -30,7 +30,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "open-rigs", git = "https://github.com/Coen-Lab/lib-open-rigs?rev=9ee4e5be6b0f617cedf93ac72bd6b66f53aba334" }]
+requires-dist = [{ name = "open-rigs", git = "https://github.com/Coen-Lab/lib-open-rigs?rev=f52ff701ef8be246167bf1bc209cd355522cc42c" }]
 
 [package.metadata.requires-dev]
 dev = [{ name = "pytest" }]
@@ -215,7 +215,7 @@ wheels = [
 [[package]]
 name = "open-rigs"
 version = "0.0.0"
-source = { git = "https://github.com/Coen-Lab/lib-open-rigs?rev=9ee4e5be6b0f617cedf93ac72bd6b66f53aba334#9ee4e5be6b0f617cedf93ac72bd6b66f53aba334" }
+source = { git = "https://github.com/Coen-Lab/lib-open-rigs?rev=f52ff701ef8be246167bf1bc209cd355522cc42c#f52ff701ef8be246167bf1bc209cd355522cc42c" }
 dependencies = [
     { name = "pydantic" },
     { name = "pydantic-yaml" },
