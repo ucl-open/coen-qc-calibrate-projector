@@ -11,14 +11,14 @@
                  xmlns:orl="clr-namespace:OpenRigs.Logging;assembly=OpenRigs.Logging"
                  xmlns:lv="clr-namespace:OpenRigs.LiveView;assembly=OpenRigs.LiveView"
                  xmlns="https://bonsai-rx.org/2018/workflow">
-  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from a photodiode on the behavior board's AnalogInput0, and writes each level and its reading to calibration\gamma-ramp.csv beside this machine's rig.yml. It measures only: rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\gammalut.bmp, with gammalut.json recording the ramp and who ran it, and dated copies in calibration\history\). The board and its clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromBoard with SetClock false, ReadyGate); a calibration has no experiment folder (OpenRigs.Logging NoExperimentFolder), so no piece logs. The window is OpenRigs.Vision's RawProjectorDisplay: the projector's window with no mesh mapping and no gamma correction, black until a level is drawn on DrawStimuli. DisplayDevice is left at First, as av-dome's window is (rig-control passes it to neither); a display the machine lacks stops the workflow at Start. Ready once the board's time is read and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
+  <Description>Calibrates a dome projector's gamma: shows a ramp of grey levels full screen, reads each one's brightness from the Photodiode on the behavior board's ADC0 (AnalogInput0), and writes each level and its reading to calibration\Projector-GammaRamp.csv beside this machine's rig.yml. It measures only: app-rig-control fits the ramp once the run completes and writes the lookup table BonVision's GammaCorrection reads (calibration\Projector-Gamma.bmp, with Projector-Gamma.json recording the ramp and who ran it; the files it replaces go to calibration\_backups\). The board and its clock are the lab's device pieces, each from this machine's rig.yml (ReadLabRig, BehaviorBoard, ClockFromBoard with SetClock false, ReadyGate); a calibration has no experiment folder (OpenRigs.Logging NoExperimentFolder), so no piece logs. The window is OpenRigs.Vision's RawProjectorDisplay: the projector's window with no mesh mapping and no gamma correction, black until a level is drawn on DrawStimuli. DisplayDevice is left at First, as av-dome's window is (app-rig-control passes it to neither); a display the machine lacks stops the workflow at Start. Ready once the board's time is read and the photodiode's first reading arrives; Go runs the ramp; Finished once every level is written.</Description>
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
-        <Property Name="ConfigRoot" DisplayName="ConfigRoot" Description="The root under which each machine has its own configuration directory, &lt;ConfigRoot&gt;\&lt;MACHINE-NAME&gt;\rig.yml; the ramp is written into calibration\ there." />
+        <Property Name="ConfigRoot" DisplayName="ConfigRoot" Description="The root under which each machine has its own configuration directory, &lt;ConfigRoot&gt;\&lt;RIG&gt;\rig.yml; the ramp is written into calibration\ there." />
       </Expression>
       <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ReadLabRig.bonsai">
-        <Description>This machine's rig.yml (ConfigRoot\MACHINE\rig.yml) read once into the lab rig model: RigConfigs, RigFile, RigConfigDirectory and ConfigRoot, which every device piece reads. First, before anything that reads them.</Description>
+        <Description>This machine's rig.yml (ConfigRoot\&lt;RIG&gt;\rig.yml) read once into the lab rig model: RigConfigs, RigFile and ConfigRoot, which every device piece reads. First, before anything that reads them.</Description>
         <ConfigRoot>C:\Coen-Lab-Local\RigConfigs</ConfigRoot>
       </Expression>
       <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Logging:NoExperimentFolder.bonsai">
@@ -26,7 +26,7 @@
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="SubjectId" />
         <Property Name="SessionId" />
-        <Property Name="LaunchId" Description="The launcher's run id; the launch's own, from rig-control." />
+        <Property Name="LaunchId" Description="The launcher's run id; the launch's own, from app-rig-control." />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Initialization</Name>
@@ -68,7 +68,7 @@
         </Workflow>
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
-        <Property Name="DisplayDevice" DisplayName="DisplayDevice" Description="The display the dome projector is on (OpenRigs.Vision RawProjectorDisplay). First by default, the display the lab's dome windows open on; rig-control does not pass it, so a dome whose projector is not Windows' first display needs it in calibrations.toml's [gamma.rig] and in that dome's own launch." />
+        <Property Name="DisplayDevice" DisplayName="DisplayDevice" Description="The display the dome projector is on (OpenRigs.Vision RawProjectorDisplay). First by default, the display the lab's dome windows open on; app-rig-control does not pass it, so a dome whose projector is not Windows' first display needs it in calibrations.toml's [projector.rig] and in that dome's own launch." />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Hardware</Name>
@@ -79,12 +79,12 @@
               <PieceStages>HarpClockRead</PieceStages>
               <WorkflowStages>CalibrationReady</WorkflowStages>
             </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.BehaviorBoard.bonsai">
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.bonsai">
               <Name>BehaviorBoard-Main</Name>
               <CommandsSubjectName>BehaviorBoard-Main.Commands</CommandsSubjectName>
               <DataSubjectName>BehaviorBoard-Main.Data</DataSubjectName>
             </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:BehaviorBoard.ClockFromBoard.bonsai">
+            <Expression xsi:type="IncludeWorkflow" Path="OpenRigs.Devices:ClockFromBoard.bonsai">
               <Board>BehaviorBoard-Main</Board>
               <SetClock>false</SetClock>
               <BoardDataSubjectName>BehaviorBoard-Main.Data</BoardDataSubjectName>
@@ -148,18 +148,21 @@
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Calibration</Name>
-        <Description>At Go: after 1 s of black, each of Levels grey levels full screen for 0.5 s (fixed: the reading window ends at 0.45 s), its photodiode reading the mean from 0.2 s to 0.45 s in (the level as the level metric). Each level and its reading is written as it comes to calibration\gamma-ramp.csv in RigConfigDirectory (columns level, reading; replaced every run). No fit here: once the run completes, rig-control interpolates the lookup from the ramp and writes calibration\gammalut.bmp and gammalut.json, with history, refusing a ramp that got no brighter. Reports how many levels were measured as the points metric, then Finished.</Description>
+        <Description>At Go: after 1 s of black, each of Levels grey levels full screen for 0.5 s (fixed: the reading window ends at 0.45 s), its photodiode reading the mean from 0.2 s to 0.45 s in (the level as the level metric). Each level and its reading is written as it comes to calibration\Projector-GammaRamp.csv beside rig.yml, RigFile's folder (columns level, reading; replaced every run). No fit here: once the run completes, app-rig-control interpolates the lookup from the ramp and writes calibration\Projector-Gamma.bmp and Projector-Gamma.json, with backups, refusing a ramp that got no brighter. Reports how many levels were measured as the points metric, then Finished.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="SubscribeSubject">
-              <Name>RigConfigDirectory</Name>
+              <Name>RigFile</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="io:GetDirectoryName" />
             </Expression>
             <Expression xsi:type="Format">
-              <Format>{0}\calibration\gamma-ramp.csv</Format>
+              <Format>{0}\calibration\Projector-GammaRamp.csv</Format>
             </Expression>
             <Expression xsi:type="rx:SelectMany">
               <Name>WriteRamp</Name>
-              <Description>The ramp file, opened only once its path is known: a CsvWriter creates its file when the workflow starts, from whatever FileName it has then, and RigConfigDirectory (an AsyncSubject) arrives a moment later, so a writer mapped from it directly wrote into the workflow's own folder, the lab clone, every run. Started by the path, it writes the rows RampReadings carries.</Description>
+              <Description>The ramp file, opened only once its path is known: a CsvWriter creates its file when the workflow starts, from whatever FileName it has then, and RigFile (an AsyncSubject) arrives a moment later, so a writer mapped from it directly wrote into the workflow's own folder, the lab clone, every run. Started by the path, it writes the rows RampReadings carries.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
@@ -174,7 +177,7 @@
                     <Name>RampReadings</Name>
                   </Expression>
                   <Expression xsi:type="orl:CsvWriter">
-                    <io:FileName>gamma-ramp.csv</io:FileName>
+                    <io:FileName>Projector-GammaRamp.csv</io:FileName>
                     <io:Append>false</io:Append>
                     <io:Overwrite>true</io:Overwrite>
                     <io:Suffix>None</io:Suffix>
@@ -200,7 +203,7 @@
             </Expression>
             <Expression xsi:type="rx:SelectMany">
               <Name>Ramp</Name>
-              <Description>The levels, one every 0.5 s after 1 s, each drawn full screen and measured; each (level, reading) pair once it is read, also reported as the reading metric ("0.513 412.37": both in one, since rig-control polls once a second), completing after the last. The grey level reaches DrawQuad's colour through its own Item1 (workflow_lint shared_mapping_problems): a PropertyMapping fed by a node with other successors is set only after its target has read its properties.</Description>
+              <Description>The levels, one every 0.5 s after 1 s, each drawn full screen and measured; each (level, reading) pair once it is read, also reported as the reading metric ("0.513 412.37": both in one, since app-rig-control polls once a second), completing after the last. The grey level reaches DrawQuad's colour through its own Item1 (workflow_lint shared_mapping_problems): a PropertyMapping fed by a node with other successors is set only after its target has read its properties.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
@@ -361,22 +364,23 @@
             </Expression>
           </Nodes>
           <Edges>
-            <Edge From="0" To="1" Label="Source1" />
-            <Edge From="1" To="2" Label="Source1" />
-            <Edge From="4" To="5" Label="Source1" />
-            <Edge From="3" To="5" Label="Source2" />
+            <Edge From="2" To="3" Label="Source1" />
             <Edge From="5" To="6" Label="Source1" />
+            <Edge From="4" To="6" Label="Source2" />
             <Edge From="6" To="7" Label="Source1" />
-            <Edge From="2" To="8" Label="Source1" />
-            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="3" To="9" Label="Source1" />
             <Edge From="9" To="10" Label="Source1" />
             <Edge From="10" To="11" Label="Source1" />
+            <Edge From="11" To="12" Label="Source1" />
+            <Edge From="0" To="1" Label="Source1" />
+            <Edge From="1" To="2" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
       <Expression xsi:type="lv:StreamDevices">
         <Name>LiveView</Name>
-        <Description>Streams every rig.yml device this workflow publishes (its &lt;Device&gt;.Data) to rig-control's live view (OpenRigs.LiveView): data on TCP 5556, video on 5558, as in every lab workflow. Last, with nothing feeding it: it finds only subjects built before it.</Description>
+        <Description>Streams every rig.yml device this workflow publishes (its &lt;Device&gt;.Data) to app-rig-control's live view (OpenRigs.LiveView): data on TCP 5556, video on 5558, as in every lab workflow. Last, with nothing feeding it: it finds only subjects built before it.</Description>
         <lv:ConfigRoot>C:\Coen-Lab-Local\RigConfigs</lv:ConfigRoot>
         <lv:DataPort>5556</lv:DataPort>
         <lv:VideoPort>5558</lv:VideoPort>

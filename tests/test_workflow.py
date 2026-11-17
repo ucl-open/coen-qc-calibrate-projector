@@ -1,5 +1,5 @@
 """src\\main.bonsai against the lab's rules for a workflow's hardware (open_rigs.rigs.workflow_lint): the lab's device
-pieces, never a board opened by hand (Pip, 16 Nov 2026), and the ramp's output as before."""
+pieces, never a board opened by hand (Pip, 16 Nov 2026), and the ramp's output file."""
 
 from pathlib import Path
 
@@ -48,7 +48,7 @@ def test_no_experiment_folder(wf):
 
 
 def test_no_launch_property_but_the_lab_ones(wf):
-    # The board piece reads rig.yml's port itself, so rig-control gives no PortName.
+    # The board piece reads rig.yml's port itself, so app-rig-control gives no PortName.
     top = lint.nodes_and_edges(lint.child(wf.root, W + "Workflow"))[0]
     names = {p.get("DisplayName") or p.get("Name") for n in top if n.get(XSI) == "ExternalizedMapping" for p in n.iter(W + "Property")}
     assert names == {"ConfigRoot", "SubjectId", "SessionId", "LaunchId", "DisplayDevice", "Levels"}
@@ -56,7 +56,7 @@ def test_no_launch_property_but_the_lab_ones(wf):
 
 def test_the_ramp_file_keeps_its_columns(wf):
     assert "new(Item1 as level, Item2 as reading)" in wf.text
-    assert "{0}\\calibration\\gamma-ramp.csv" in wf.text
+    assert "{0}\\calibration\\Projector-GammaRamp.csv" in wf.text
 
 
 def test_live_view_is_last_and_fed_by_nothing(wf):

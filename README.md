@@ -1,20 +1,20 @@
 # coen-qc-calibrate-projector
 
-Calibrates a Coen Lab dome projector. Today it does the gamma: it shows a ramp of grey levels full screen and reads each one's brightness with a photodiode. rig-control fits the ramp into the lookup table that BonVision's `GammaCorrection` reads, where the rig's experiment workflows find it. Mesh mapping will join it here; until then it is done by hand with av-dome's `src\MeshMapping`.
+Calibrates a Coen Lab dome projector. Today it does the gamma: it shows a ramp of grey levels full screen and reads each one's brightness with the Photodiode on the behavior board's ADC0. app-rig-control fits the ramp into the lookup table that BonVision's `GammaCorrection` reads, where the rig's experiment workflows find it. Mesh mapping will join it here; until then it is done by hand with av-dome's `src\MeshMapping`.
 
-Run it from rig-control's Calibrations page. It is an open-rigs project under `ExperimentControl`, which the page launches, watches and stops.
+Run it from app-rig-control's Calibrations page. It is an open-rigs project under `ExperimentControl`, which the page launches, watches and stops.
 
-**Not yet run on a dome.** It builds, and rig-control's fit is tested on synthetic ramps; the first hardware run needs someone at the dome.
+**Not yet run on a dome.** It builds, and app-rig-control's fit is tested on synthetic ramps; the first hardware run needs someone at the dome.
 
-## Bonsai Measures, rig-control Computes
+## Bonsai Measures, app-rig-control Computes
 
-This workflow drives the display and the board and writes the raw ramp, nothing more. It has no C# of its own. The lookup, its record and its history are written by rig-control's Python (`calibrations.py`, `fit_run` and `write_gamma`), with tests, once the run has completed. The lab's rule (Pip, 7 Nov 2026) is that fits and derived files are tested Python, never C# in a workflow.
+This workflow drives the display and the board and writes the raw ramp, nothing more. It has no C# of its own. The lookup, its record and the backups are written by app-rig-control's Python (`calibrations.py`, `fit_run` and `write_gamma`), with tests, once the run has completed. The lab's rule (Pip, 7 Nov 2026) is that fits and derived files are tested Python, never C# in a workflow.
 
 ## What It Takes
 
-- **A photodiode on the behavior board's ADC0**, facing the screen. The workflow reads `AnalogInput0` (1 kHz, ADC counts). Nothing else on the domes uses ADC0 today. The dome's sync-square photodiode is on a digital input (DIPort0), which says only light or dark, so it cannot measure brightness.
-- **The rig's own rig.yml** (`<ConfigRoot>\<MACHINE-NAME>\rig.yml`), read by lib-open-rigs' `ReadLabRig`. The hardware is the lab's device pieces, as in a session, never a board opened by hand (Pip, 16 Nov 2026): `ReadyGate`, `BehaviorBoard` (`BehaviorBoard-Main`) and `ClockFromBoard` (`SetClock` false: it reads the board's time and sets no clock), each from its rig.yml entry. A calibration has no experiment folder: lib-open-rigs' `NoExperimentFolder` declares `PathPrefix`, never published, so no piece logs. Ready waits for the board's time (`HarpClockRead`) and the workflow's own stage (ReadyGate's `WorkflowStages`), `CalibrationReady` (the first ADC0 reading). `PortName` is no longer a launch property (until 16 Nov 2026 rig-control passed rig.yml's port).
-- **`DisplayDevice`** stays at `First`, the display the lab's dome windows open on: rig-control does not pass it. A dome whose projector is not Windows' first display needs it added to calibrations.toml's `[gamma.rig]` and to that dome's own launch; a display the machine lacks stops the workflow at Start, naming `RawProjectorDisplay`.
+- **The Photodiode on the behavior board's ADC0**, facing the screen. The workflow reads `AnalogInput0` (1 kHz, ADC counts). It is the same sensor that watches the sync square on DIPort0 in a session (one device, `DIPort0: { device: Photodiode }` in rig.yml's wiring); DIPort0 says only light or dark, so the gamma reads it on ADC0, which nothing else on the domes uses.
+- **The rig's own rig.yml** (`<ConfigRoot>\<RIG>\rig.yml`), read by lib-open-rigs' `ReadLabRig`. The hardware is the lab's device pieces, as in a session, never a board opened by hand (Pip, 16 Nov 2026): `ReadyGate`, `BehaviorBoard` (`BehaviorBoard-Main`) and `ClockFromBoard` (`SetClock` false: it reads the board's time and sets no clock), each from its rig.yml entry. A calibration has no experiment folder: lib-open-rigs' `NoExperimentFolder` declares `PathPrefix`, never published, so no piece logs. Ready waits for the board's time (`HarpClockRead`) and the workflow's own stage (ReadyGate's `WorkflowStages`), `CalibrationReady` (the first ADC0 reading).
+- **`DisplayDevice`** stays at `First`, the display the lab's dome windows open on: app-rig-control does not pass it. A dome whose projector is not Windows' first display needs it added to calibrations.toml's `[projector.rig]` and to that dome's own launch; a display the machine lacks stops the workflow at Start, naming `RawProjectorDisplay`.
 - **`Levels`** (default 80, the width of the lab's lookup tables). Each level shows for a fixed 0.5 s and is read from 0.2 s to 0.45 s after it appears; the period is not a property, so it cannot be set shorter than the read window.
 
 ## A Run
@@ -22,19 +22,19 @@ This workflow drives the display and the board and writes the raw ramp, nothing 
 1. Put the photodiode on the screen and into the board's ADC0. Keep the room dark.
 2. On the Calibrations page, press Projector Gamma's **Calibrate** and give your Lab PIN. The projector goes black: the window is lib's `RawProjectorDisplay`, full screen with no mesh mapping and no gamma correction, so the ramp drives the projector's raw levels.
 3. **Ready** once the board's time is read and the photodiode's first reading arrives from ADC0 (a board sending no analog data never gets there). Press **Start Calibration**.
-4. After 1 s of black, the levels from black to white, one every 0.5 s (80 levels take about 41 s). The `level` metric is the one shown; the `reading` metric is the last level read and its photodiode mean, `0.513 412.37` (both in one metric, since rig-control polls once a second and the level moves on every 0.5 s), which rig-control plots as the run goes.
-5. **Finished** once every level is written; the `points` metric says how many. rig-control then fits the ramp and the page shows the result: the levels, the gamma that fits the ramp (brightness as level to that power), and the dark and white readings. Or why nothing was written.
+4. After 1 s of black, the levels from black to white, one every 0.5 s (80 levels take about 41 s). The `level` metric is the one shown; the `reading` metric is the last level read and its photodiode mean, `0.513 412.37` (both in one metric, since app-rig-control polls once a second and the level moves on every 0.5 s), which app-rig-control plots as the run goes.
+5. **Finished** once every level is written; the `points` metric says how many. app-rig-control then fits the ramp and the page shows the result: the levels, the gamma that fits the ramp (brightness as level to that power), and the dark and white readings. Or why nothing was written.
 
 ## What It Writes
 
-The workflow writes `calibration\gamma-ramp.csv` beside rig.yml with OpenRigs.Logging's `CsvWriter`, the lab's logger: columns `level` (0 to 1) and `reading` (the photodiode's mean, ADC counts), one row per level as it is read, replaced each run.
+The workflow writes `calibration\Projector-GammaRamp.csv` beside rig.yml with OpenRigs.Logging's `CsvWriter`, the lab's logger: columns `level` (0 to 1) and `reading` (the photodiode's mean, ADC counts), one row per level as it is read, replaced each run.
 
-Once the run completes, rig-control writes, into the same `calibration\`, where rig.yml's `projectionCalibration: gammaLutPath` points:
+Once the run completes, app-rig-control writes, into the same `calibration\`, where rig.yml's `projector: { meshPath, gammaPath }` points (`gammaPath: calibration/Projector-Gamma.bmp`, `meshPath: calibration/Projector-Mesh.csv`):
 
-- `gammalut.bmp`: one row, `Levels` pixels wide, 24-bit grey. Pixel *i* is the drive level that gives brightness (*i* + 0.5) / `Levels` of full white, above the dark screen: the input BonVision samples at that pixel's centre (rig-control's `lookup_inputs`). Each comes from the measured ramp, interpolated between the two levels around it, never falling, with black and white pinned to 0 and 1.
-- `gammalut.json`: when, who (whoever launched it, by Lab PIN), the machine, and the ramp: each level, its reading and its drive.
-- `runs\gamma\<run>\`: the run's `gamma-ramp.csv`, moved there as it was at the run's end (kept whether or not it could be fitted), and mirrored to the share's `calibration\runs\gamma\` with it.
-- `history\`: a dated copy of the lookup and its record, and the lookup being replaced, under its own date, if it is not there already.
+- `Projector-Gamma.bmp`: one row, `Levels` pixels wide, 24-bit grey. Pixel *i* is the drive level that gives brightness (*i* + 0.5) / `Levels` of full white, above the dark screen: the input BonVision samples at that pixel's centre (app-rig-control's `lookup_inputs`). Each comes from the measured ramp, interpolated between the two levels around it, never falling, with black and white pinned to 0 and 1.
+- `Projector-Gamma.json`: when, who (whoever launched it, by Lab PIN), the machine, and the ramp: each level, its reading and its drive.
+- `runs\projector\<run>\`: the run's `Projector-GammaRamp.csv`, moved there as it was at the run's end (kept whether or not it could be fitted), and mirrored to the share's `calibration\runs\projector\` with it.
+- `_backups\`: the lookup and record being replaced, as `<stem>_<YYYY-MM-DDTHH-MM-SS>_superseded<ext>` (UTC).
 
 A ramp whose white is no brighter than its black is refused and no lookup is written: the photodiode is not facing the screen or not on ADC0. A run that is stopped is not fitted.
 
