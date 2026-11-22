@@ -16,3 +16,16 @@ History is in `git log`.
 ## Not recommended
 
 - `rx:Average` error not named (`src\main.bonsai:278`): naming it needs a lib operator.
+
+## Audit 2026-11-22 (/audit-rigs, pipeline)
+
+Changed (7a0be73): CI runs `scripts\check-workflow.ps1` in place of the C# 5 and parse steps, and the header no longer calls the check private (P6S-L1).
+
+Deferred:
+
+- P3Q-I3: whether the workflow finishes needs a dome run (Finished should arrive about 41 s after Go).
+- A manual Checks run of the new step.
+
+Not changed, do not raise again without new information:
+
+- None in this repo this round.
