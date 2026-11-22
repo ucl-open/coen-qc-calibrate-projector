@@ -19,4 +19,4 @@ testpaths = ["tests"]
 
 [tool.uv.sources]
 # lib-open-rigs' update-workflows moves this pin.
-open-rigs = {git = "https://github.com/Coen-Lab/lib-open-rigs", rev = "a293b443de7a783406ba8d5c35a9cb4a12639f9c"}
+open-rigs = {git = "https://github.com/Coen-Lab/lib-open-rigs", rev = "08ca33d56c942b823b3367a6494f017d42516b66"}
